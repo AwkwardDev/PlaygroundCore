@@ -426,7 +426,7 @@ enum SpellAttr4
     SPELL_ATTR4_NOT_USABLE_IN_ARENA              = 0x00010000, // 16 not usable in arena
     SPELL_ATTR4_USABLE_IN_ARENA                  = 0x00020000, // 17 usable in arena
     SPELL_ATTR4_UNK18                            = 0x00040000, // 18
-    SPELL_ATTR4_UNK19                            = 0x00080000, // 19
+    SPELL_ATTR4_CANT_PROC_ON_FULL_ABSORB         = 0x00080000, // 19 Spell cannot proc if damages are fully absorbed
     SPELL_ATTR4_NOT_CHECK_SELFCAST_POWER         = 0x00100000, // 20 supersedes message "More powerful spell applied" for self casts.
     SPELL_ATTR4_UNK21                            = 0x00200000, // 21
     SPELL_ATTR4_UNK22                            = 0x00400000, // 22

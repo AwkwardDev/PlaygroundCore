@@ -14179,11 +14179,17 @@ void Unit::ProcDamageAndSpellFor(bool isVictim, Unit * pTarget, uint32 procFlag,
         if (procAura && procAura->Id == itr->first)
             continue;
         ProcTriggeredData triggerData(itr->second->GetBase());
+
         // Defensive procs are active on absorbs (so absorption effects are not a hindrance)
-        bool active = (damage > 0) || (procExtra & (PROC_EX_ABSORB|PROC_EX_BLOCK) && isVictim);
+        bool active = (damage > 0) || ((procExtra & PROC_EX_BLOCK) && isVictim);
         if (isVictim)
             procExtra &= ~PROC_EX_INTERNAL_REQ_FAMILY;
         SpellEntry const* spellProto = itr->second->GetBase()->GetSpellProto();
+        // Spells with SPELL_ATTR4_CANT_PROC_ON_FULL_ABSORB should'nt proc if damages are fully absorbed
+        if ((procExtra & PROC_EX_ABSORB) && isVictim)
+            if (damage > 0 || (spellProto->AttributesEx4 & SPELL_ATTR4_CANT_PROC_ON_FULL_ABSORB))
+                active = true;
+
         if(!IsTriggeredAtSpellProcEvent(pTarget, triggerData.aura, procSpell, procFlag, procExtra, attType, isVictim, active, triggerData.spellProcEvent))
             continue;
 
