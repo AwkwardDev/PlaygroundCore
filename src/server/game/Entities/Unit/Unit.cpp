@@ -14186,9 +14186,9 @@ void Unit::ProcDamageAndSpellFor(bool isVictim, Unit * pTarget, uint32 procFlag,
             procExtra &= ~PROC_EX_INTERNAL_REQ_FAMILY;
         SpellEntry const* spellProto = itr->second->GetBase()->GetSpellProto();
         // Spells with SPELL_ATTR4_CANT_PROC_ON_FULL_ABSORB should'nt proc if damages are fully absorbed
-        if ((procExtra & PROC_EX_ABSORB) && isVictim)
-            if (damage > 0 || (spellProto->AttributesEx4 & SPELL_ATTR4_CANT_PROC_ON_FULL_ABSORB))
-                active = true;
+        if ((procExtra & PROC_EX_ABSORB) && isVictim && damage == 0)
+            if (spellProto->AttributesEx4 & SPELL_ATTR4_CANT_PROC_ON_FULL_ABSORB)
+                active = false;
 
         if(!IsTriggeredAtSpellProcEvent(pTarget, triggerData.aura, procSpell, procFlag, procExtra, attType, isVictim, active, triggerData.spellProcEvent))
             continue;

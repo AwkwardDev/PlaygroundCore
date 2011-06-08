@@ -99,6 +99,11 @@ enum DataTypes
     DATA_CAPTAIN_RUPERT             = 34,
     DATA_VALITHRIA_TRIGGER          = 35,
     DATA_VALITHRIA_LICH_KING        = 36,
+
+    // Gunship Battle
+    DATA_FIRST_SQUAD_ASSISTED       = 37,
+    DATA_SECOND_SQUAD_ASSISTED      = 38,
+    DATA_RAMPART_TRASH_COUNT        = 39
 };
 
 enum CreaturesIds
@@ -151,6 +156,24 @@ enum CreaturesIds
     NPC_EMPOWERED_ADHERENT                      = 38136,
     NPC_REANIMATED_ADHERENT                     = 38010,
     NPC_VENGEFUL_SHADE                          = 38222,
+
+    // Ramparts of Skulls
+    NPC_KORKRON_PRIMALIST                       = 37030,
+    NPC_SKYBREAKER_HIEROPHANT                   = 37029,
+    NPC_KORKRON_DEFENDER                        = 37032,
+    NPC_SKYBREAKER_PROTECTOR                    = 36998,
+    NPC_KORKRON_NECROLYTE                       = 37149,
+    NPC_SKYBREAKER_SUMMONER                     = 37148,
+    NPC_KORKRON_ORACLE                          = 37031,
+    NPC_SKYBREAKER_LIGHT                        = 37016,
+    NPC_KORKRON_REAVER                          = 37029,
+    NPC_SKYBREAKER_DREADBLADE                   = 37004,
+    NPC_KORKRON_SNIPER                          = 37146,
+    NPC_SKYBREAKER_MARKSMAN                     = 37144,
+    NPC_KORKRON_TEMPLAR                         = 37034,
+    NPC_SKYBREAKER_VICAR                        = 37021,
+    NPC_KORKRON_VANQUISHER                      = 37035,
+    NPC_SKYBREAKER_VINDICATOR                   = 37003,
 
     // Deathbringer Saurfang
     NPC_DEATHBRINGER_SAURFANG                   = 37813,
@@ -396,6 +419,12 @@ enum WorldStatesICC
     WORLDSTATE_ATTEMPTS_REMAINING   = 4941,
     WORLDSTATE_ATTEMPTS_MAX         = 4942,
 };
+
+enum TrashCount
+{
+    REQUIRED_TRASH_FIRST_SQUAD = ;
+    REQUIRED_TRASH_SECOND_SQUAD = ;
+}
 
 class spell_trigger_spell_from_caster : public SpellScriptLoader
 {
