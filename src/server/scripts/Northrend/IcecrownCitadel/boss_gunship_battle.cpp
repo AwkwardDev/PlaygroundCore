@@ -1,7 +1,7 @@
 ﻿/* Gunship Battle
  * Dev start : 29 / 05 / 2011
  * TODO List :
- * - [COMPLETE] Fix Below Zero to freeze only cannons. Mages are done with SAI
+ * - [COMPLETE] Fix Below Zero to freeze only cannons.
      -> http://www.trinitycore.org/f/topic/3269-complete-gunship-battle-sai/page__gopid__19479#entry19479
  * - Get approximative positions for every NPC, coupling Horde with Alliance to gain performance
  * - Encounter frames : the enemy one is the first one. They both are supposed to be friendly to 
@@ -23,42 +23,42 @@
 
 const Position npcPositions[] = 
 {
-    {-472.596f, 2466.8701f, 190.7371f, 6.204f}, // Muradin / Saurfang, in the ship of the players
+    {-472.596f, 2466.8701f, 190.7371f, 6.204f}, // Muradin on his ship
 };
 
 enum Spells
 {
     AURA_ON_OGRIM_HAMMER        = 70121,
     AURA_ON_SKYBREAKERS_DECK    = 70120,
-    SPELL_OVERHEAT                = 69487,
+    SPELL_OVERHEAT              = 69487,
 
     // Canon de la cannonière ( 2 en 10, 4 en 25)
-    SPELL_CANNON_BLAST            = 69400,
+    SPELL_CANNON_BLAST          = 69400,
     SPELL_INCINERATING_BLAST    = 69402,
 
     // High Overlord Saurcroc / Muradin Bronzebeard
     SPELL_CLEAVE                = 15284,
-    SPELL_TASTE_FOR_BLOOD        = 69634,
-    SPELL_RENDING_THROW            = 70309,
+    SPELL_TASTE_FOR_BLOOD       = 69634,
+    SPELL_RENDING_THROW         = 70309,
 
     // All troops
-    SPELL_BURNING_PITCH            = 71335,
+    SPELL_BURNING_PITCH         = 71335,
     // From WowWiki :
     // All enemy NPCs except the Commanders (Muradin / Saurfang) and the Battle-Mage/Sorceror gain 
     // experience the longer they are left alive, starting from Regular and progressing to Experienced, 
     // then Veteran, and finally Elite. Depending on rank, damage and attack speed are increased. 
     SPELL_EXPERIENCED            = 71188, // ~20 sec
     SPELL_VETERAN                = 71193, // ~40 sec
-    SPELL_ELITE                    = 71195, // ~60 sec
+    SPELL_ELITE                  = 71195, // ~60 sec
     
     // Skybreaker Marine / Kor'kron Reaver / Skybreaker Sergeant / Kor'kron Sergeant 
     SPELL_DESPERATE_RESOLVE_10N    = 69647, // HP < 20%
     SPELL_DESPERATE_RESOLVE_10H    = 72537, // --------
     SPELL_DESPERATE_RESOLVE_25N    = 72536, // --------
-    SPELL_DESPERATE_RESOLVE_25H = 72538, // --------
+    SPELL_DESPERATE_RESOLVE_25H    = 72538, // --------
 
     // Kor'kron Sergeant & Skybreaker Sergeant
-    SPELL_BLADESTORM            = 69652,
+    SPELL_BLADESTORM             = 69652,
     SPELL_WOUNDING_STRIKE_10N    = 69651,
     SPELL_WOUNDING_STRIKE_10H    = 72569,
     SPELL_WOUNDING_STRIKE_25N    = 72570,
@@ -69,23 +69,23 @@ enum Spells
     SPELL_SHOOT_10H                = 72567,
     SPELL_SHOOT_25N                = 72566,
     SPELL_SHOOT_25H                = 72568,
-    SPELL_HURL_AXE_10N            = 70161,
-    SPELL_HURL_AXE_10H            = 72540,
-    SPELL_HURL_AXE_25N            = 72539,
-    SPELL_HURL_AXE_25H            = 72541,
-    
+    SPELL_HURL_AXE_10N             = 70161,
+    SPELL_HURL_AXE_10H             = 72540,
+    SPELL_HURL_AXE_25N             = 72539,
+    SPELL_HURL_AXE_25H             = 72541,
+
     // Skybreaker Sorcerer / Kor'kron Battle-Mage 
     SPELL_BELOW_ZERO            = 69705,
     
     // Skybreaker Mortar Soldier / Kor'kron Rocketeer 
-    SPELL_ROCKET_ARTILLERY        = 69679,
-    SPELL_ROCKET_ARTILLERY_TARGET_ALLIANCE = 69678, // Requires Target Aura Spell (70120) Sur le pont du Brise-ciel
+    SPELL_ROCKET_ARTILLERY         = 69679,
+    SPELL_ROCKET_ARTILLERY_TARGET_ALLIANCE    = 69678, // Requires Target Aura Spell (70120) Sur le pont du Brise-ciel
     SPELL_ROCKET_ARTILLERY_TARGET_HORDE       = 70609, // Requires Target Aura Spell (70121) Sur le pont du Marteau d'Orgrim
     SPELL_EXPLOSION                = 69680, // Triggered by the previous one when it hits the ground
     SPELL_TARGET_MARKER            = 71371, // Triggered by 69679 when it is CAST
 
     // Achievement
-    SPELL_ACHIEVEMENT            = 72959, // You must be a tagrte for this spell to get the achievement
+    SPELL_ACHIEVEMENT              = 72959, // You must be a target for this spell to get the achievement
 };
 
 enum ExperienceEvents
@@ -136,53 +136,14 @@ enum ExperienceEvents
 };
 
 #define AURA_BATTLE_FURY_HELPER            RAID_MODE<uint32>(72306, 72307, 72306, 72307)
-#define SPELL_WOUNDING_STRIKE_HELPER    RAID_MODE<uint32>(69651, 72569, 72570, 72571)
-#define SPELL_DESPERATE_RESOLVE_HELPER  RAID_MODE<uint32>(69647, 72537, 72536, 72538)
-#define SPELL_SHOOT_HELPER                RAID_MODE<uint32>(70162, 72567, 72566, 72568)
-#define SPELL_HURL_AXE_HELPER            RAID_MODE<uint32>(70161, 72540, 72539, 72541)
-
-// Texts - Horde
-#define SAY_KORKRON_FIRST_SQUAD_0       "Thank the spirits for you, brothers and sisters. The Skybreaker has already left. Quickly now, to Orgrim's Hammer! If you leave soon, you may be able to catch them."
-#define SAY_KORKRON_FIRST_SQUAD_1       "This should be helpin'ya!"
-#define SAY_KORKRON_SECOND_SQUAD_0      "Aka'Magosh, brave warriors. The alliance is in great number here."
-#define SAY_KORKRON_SECOND_SQUAD_1      "Captain Saurfang will be pleased to see you aboard Orgrim's Hammer. Make haste, we will secure the area until you are ready for take-off."
-#define YELL_EVENT_BEGIN_HORDE_HIGH_OVERLORD_SAURFANG_0 "Rise up, sons and daughters of the Horde! Today we battle a hated enemy of the Horde! LOK'TAR OGAR! Kor'kron, take us out!"
-#define YELL_EVENT_BEGIN_HORDE_HIGH_OVERLORD_SAURFANG_1 "What is that?! Something approaching in the distance!"
-#define YELL_EVENT_BEGIN_HORDE_HIGH_OVERLORD_SAURFANG_2 "ALLIANCE GUNSHIP! ALL HANDS ON DECK!"
-#define YELL_EVENT_BEGIN_HORDE_MURADIN_BRONZEBEARD_0    "Move yer jalopy or we'll blow it out of the sky, orc! The Horde's got no business here!"
-#define YELL_EVENT_BEGIN_HORDE_HIGH_OVERLORD_SAURFANG_3         "You will know our business soon! KOR'KRON, ANNIHILATE THEM!"
-#define YELL_BOARDING_ORGRIM_S_HAMMER_MURADIN_BRONZEBEARD_0     "Marines, Sergeants, attack!"
-#define YELL_BOARDING_ORGRIM_S_HAMMER_HIGH_OVERLORD_SAURFANG_0  "You DARE board my ship? Your death will come swiftly."
-#define YELL_NEW_RIFLEMEN_MURADIN       "Riflemen, shoot faster!"
-#define YELL_NEW_MORTAR_TEAM_MURADIN    "Mortar team, reload!"
-#define YELL_NEW_MAGE_MURADIN           "We're taking hull damage, get a sorcerer out here to shut down those cannons!"
-#define YELL_HORDE_VICTORY_SAURFANG     "The Alliance falter. Onward to the Lich King!"
-#define YELL_HORDE_DEFEAT_SAURFANG      "Damage control! Put those fires out! You haven't seen the last of the Horde!"
-
-// Texts - Alliance
-#define SAY_SKYBREAKER_FIRST_SQUAD_0    "Thank goodness you arrived when you did, heroes. Orgrim's Hammer has already left. Quickly now, to The Skybreaker! If you leave soon, you may be able to catch them."
-#define SAY_SKYBREAKER_FIRST_SQUAD_1    "This ought to help!"
-#define SAY_SKYBREAKER_SECOND_SQUAD_0   "You have my thanks. We were outnumbered until you arrived."
-#define SAY_SKYBREAKER_SECOND_SQUAD_1   "Captain Muradin is waiting aboard The Skybreaker. We'll secure the area until you are ready for take off."
-#define SAY_SKYBREAKER_SECOND_SQUAD_2   "Skybreaker infantry, hold position!"
-#define YELL_EVENT_BEGIN_ALLIANCE_MURADIN_BRONZEBEARD_0         "Fire up the engines! We got a meetin' with destiny, lads!"
-#define YELL_EVENT_BEGIN_ALLIANCE_MURADIN_BRONZEBEARD_1         "Hold on to yer hats!"
-#define YELL_EVENT_BEGIN_ALLIANCE_MURADIN_BRONZEBEARD_2         "What in the world is that? Grab me spyglass, crewman!"
-#define YELL_EVENT_BEGIN_ALLIANCE_MURADIN_BRONZEBEARD_3         "By me own beard! HORDE SAILIN' IN FAST 'N HOT!"
-#define YELL_EVENT_BEGIN_ALLIANCE_MURADIN_BRONZEBEARD_4         "EVASIVE ACTION! MAN THE GUNS!"
-#define YELL_EVENT_BEGIN_ALLIANCE_MURADIN_BRONZEBEARD_5         "Cowardly dogs! Ye blindsided us!"
-#define YELL_EVENT_BEGIN_ALLIANCE_HIGH_OVERLORD_SAURFANG_0      "This is not your battle, dwarf. Back down or we will be forced to destroy your ship."
-#define YELL_EVENT_BEGIN_ALLIANCE_MURADIN_BRONZEBEARD_6         "Not me battle? I dunnae who ye? think ye are, mister, but I got a score to settle with Arthas and yer not gettin' in me way! FIRE ALL GUNS! FIRE! FIRE!"
-#define YELL_BOARDING_THE_SKYBREAKER_HIGH_OVERLORD_SAURFANG_0   "Reavers, Sergeants, attack!"
-#define YELL_BOARDING_THE_SKYBREAKER_MURADIN_BRONZEBEARD_0      "What's this then?! Ye won't be takin' this son o' Ironforge's vessel without a fight!"
-#define YELL_NEW_AXETHROWERS_HIGH_OVERLORD_SAURFANG_0   "Axethrowers, hurl faster!"
-#define YELL_NEW_ROCKETEERS_HIGH_OVERLORD_SAURFANG_0    "Rocketeers, reload!"
-#define YELL_NEW_BATTLE_MAGE_HIGH_OVERLORD_SAURFANG_0   "We're taking hull damage, get a battle-mage out here to shut down those cannons!"
-#define YELL_ALLIANCE_VICTORY_MURADIN_BRONZEBEARD_0        "Don't say I didn't warn ya, scoundrels! Onward, brothers and sisters!"
-#define YELL_ALLIANCE_DEFEAT_MURADIN_BRONZEBEARD_0        "Captain Bartlett, get us out of here! We're taken too much damage to stay afloat!"
+#define SPELL_WOUNDING_STRIKE_HELPER       RAID_MODE<uint32>(69651, 72569, 72570, 72571)
+#define SPELL_DESPERATE_RESOLVE_HELPER     RAID_MODE<uint32>(69647, 72537, 72536, 72538)
+#define SPELL_SHOOT_HELPER                 RAID_MODE<uint32>(70162, 72567, 72566, 72568)
+#define SPELL_HURL_AXE_HELPER              RAID_MODE<uint32>(70161, 72540, 72539, 72541)
 
 /* Muradin event starter */
-/* Todo: remove the spawning system from him and apply it the the squads */
+/* Todo: remove the spawning system from him and apply it the the squads. pInstance->CreateTransport() */
+/* Also add a method to position the gunship depending on the encounter state : See m_Waypoints */
 class npc_muradin_gunship : public CreatureScript
 {
     public:
@@ -264,8 +225,7 @@ class npc_muradin_gunship : public CreatureScript
                     // skybreaker->BuildStopMovePacket(tMap);
                 }    
             }
-            // Despawn the skybreaker (debug gossip option) because when the gunship is ended, the players' boat stays 
-            // but the adversary's one despawns when it reaches end of the waypoint.
+            // Despawn the skybreaker (debug gossip option)
             else if (action == 3)
             {
                 Transport* playersBoat = pCreature->GetTransport();
@@ -317,7 +277,8 @@ class npc_zafod_boombox : public CreatureScript
 
         bool OnGossipHello(Player* pPlayer, Creature* pCreature)
         {
-            pPlayer->ADD_GOSSIP_ITEM(0, "Yeah, I'm sure safety is your top priority. Give me a rocket pack.", 631, 1);
+            if (pPlayer->GetItemCount(49278, false) == 0)
+                pPlayer->ADD_GOSSIP_ITEM(0, "Yeah, I'm sure safety is your top priority. Give me a rocket pack.", 631, 1);
             pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
         }
 
@@ -327,9 +288,10 @@ class npc_zafod_boombox : public CreatureScript
             player->CLOSE_GOSSIP_MENU();
             if (action == 1)
             {
+                // Seurity, this shouldn't happen. Maybe useless, I can't doublecheck atm if the item is unique.
                 uint32 itemId = 49278;
                 uint32 curItemCount = player->GetItemCount(itemId, false);
-                if (curItemCount == 1)
+                if (curItemCount >= 1)
                 {
                     pCreature->MonsterWhisper("You already have my rocket pack !", player->GetGUIDLow());
                     return false;
@@ -368,9 +330,12 @@ class npc_gunship_cannon : public CreatureScript
 
             void UpdateAI(const uint32 diff)
             {
-                //if (Powers powerType = me->getPowerType())
-                //    if (me->GetPower(powerType) == me->GetMaxPower(powerType))
-                        
+                if (Powers powerType = me->getPowerType())
+                    if (me->GetPower(powerType) == me->GetMaxPower(powerType))
+                        DoCast(me, SPELL_OVERHEAT);
+
+                if (me->HasAura(SPELL_BELOW_ZERO))
+                    me->GetVehicleKit()->RemoveAllPassengers();
             }
         };
 };
@@ -388,7 +353,6 @@ class npc_gunship_axethrower : public CreatureScript
             void Reset()
             {
                 ScriptedAI::Reset();
-                events.ScheduleEvent(EVENT_HURL_AXE, 2000);
                 events.ScheduleEvent(EVENT_EXPERIENCED, urand(19, 21) * 1000); // ~20 sec
                 events.ScheduleEvent(EVENT_VETERAN, urand(39, 41) * 1000);     // ~40 sec
                 events.ScheduleEvent(EVENT_ELITE, urand(59, 61) * 1000);       // ~60 sec
@@ -401,17 +365,13 @@ class npc_gunship_axethrower : public CreatureScript
 
                 events.Update(diff);
 
-                if (me->HasUnitState(UNIT_STAT_CASTING))
-                    return;
+                if (!me->HasUnitState(UNIT_STAT_CASTING))
+                    DoCast(me->GetVictim(), SPELL_HURL_AXE_HELPER);
 
                 while (uint32 eventId = events.ExecuteEvent())
                 {
                     switch (eventId)
                     {
-                        case EVENT_HURL_AXE:
-                            DoCast(me->getVictim(), SPELL_HURL_AXE_HELPER);
-                            events.ScheduleEvent(EVENT_HURL_AXE, 2000);
-                            break;
                         case EVENT_EXPERIENCED:
                             DoCast(me, SPELL_EXPERIENCED);
                             break;
@@ -450,7 +410,6 @@ class npc_skybreaker_rifleman : public CreatureScript
             void Reset()
             {
                 ScriptedAI::Reset();
-                events.ScheduleEvent(EVENT_SHOOT, 2000);
                 events.ScheduleEvent(EVENT_EXPERIENCED, urand(19, 21) * 1000); // ~20 sec
                 events.ScheduleEvent(EVENT_VETERAN, urand(39, 41) * 1000);     // ~40 sec
                 events.ScheduleEvent(EVENT_ELITE, urand(59, 61) * 1000);       // ~60 sec
@@ -463,17 +422,13 @@ class npc_skybreaker_rifleman : public CreatureScript
 
                 events.Update(diff);
 
-                if (me->HasUnitState(UNIT_STAT_CASTING))
-                    return;
+                if (!me->HasUnitState(UNIT_STAT_CASTING))
+                    DoCast(me->getVictim(), SPELL_SHOOT_HELPER);
 
                 while (uint32 eventId = events.ExecuteEvent())
                 {
                     switch (eventId)
                     {
-                        case EVENT_HURL_AXE:
-                            DoCast(me->getVictim(), SPELL_SHOOT_HELPER);
-                            events.ScheduleEvent(EVENT_SHOOT, 2000);
-                            break;
                         case EVENT_EXPERIENCED:
                             DoCast(me, SPELL_EXPERIENCED);
                             break;
@@ -500,7 +455,7 @@ class npc_skybreaker_rifleman : public CreatureScript
 };
 
 /* Skybreaker Sorcerer & Kor'kron Battle-Mage */
-/* Those two are made with SAI along with SPELL_BELOW_ZERO */
+/* Todo */
 
 /* Kor'kron Primalist */
 class npc_korkron_primalist: public CreatureScript
@@ -556,46 +511,3 @@ void AddSC_boss_gunship_battle()
     new npc_korkron_axethrower();
     new npc_skybreaker_rifleman();
 }
-
- /* SQL REQUEST PATCH */
-
-/*
--- ScriptNames Updates
-UPDATE `creature_template` SET `ScriptName` = 'npc_muradin_gunship' WHERE `entry` = 36948;
-UPDATE `creature_template` SET `ScriptName` = 'npc_saurfang_gunship' WHERE `entry` = 36939;
-UPDATE `creature_template` SET `ScriptName` = 'npc_zafod_boombox' WHERE `entry` = 37184;
-UPDATE `creature_template` SET `ScriptName` = 'npc_gunship_cannon' WHERE `entry` = 36838;
-UPDATE `creature_template` SET `ScriptName` = 'npc_gunship_cannon' WHERE `entry` = 36839;
-UPDATE `creature_template` SET `ScriptName` = 'npc_korkron_axethrower' WHERE `entry` = 36968;
-UPDATE `creature_template` SET `ScriptName` = 'npc_skybreaker_rifleman' WHERE `entry` = 36969;
-
--- Linked spells
-DELETE FROM `spell_linked_spell` WHERE `spell_trigger` = 71193 AND `spell_effect` = -71188;
-DELETE FROM `spell_linked_spell` WHERE `spell_trigger` = 71195 AND `spell_effect` = -71193;
-INSERT INTO `spell_linked_spell` (`spell_trigger`, `spell_effect`, `type`, `comment`) VALUES
-(71193, -71188, 0, 'Gunship battle - Veteran removes Experimented'),
-(71195, -71193, 0, 'Gunship battle - Elite removes Veteran');
-
--- Add spell conditions for 69705
-SET @SPELL := 69705;
-DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId`=13 AND `SourceEntry`=@SPELL;
-INSERT INTO `conditions` (`SourceTypeOrReferenceId`,`SourceGroup`,`SourceEntry`,`ElseGroup`,`ConditionTypeOrReference`,`ConditionValue1`,`ConditionValue2`,`ConditionValue3`,`ErrorTextId`,`ScriptName`,`Comment`) VALUES
-(13,0,@SPELL,0,18,1,36838,0,0,'','Gunship Battle - Spell 69705 (Below Zero) target creature 36838'),
-(13,0,@SPELL,0,18,1,36839,0,0,'','Gunship Battle - Spell 69705 (Below Zero) target creature 36839');
-
--- Battle Standards Spells
-DELETE FROM `creature_template_addon` WHERE `entry` IN (37044, 37041);
-SET @KORKRON := 37044; -- Kor'kron Battle Standard
-SET @SKYBREAKER := 37041; -- Skybreaker Battle Standard
-SET @HSPELL := 69809;
-SET @ASPELL := 69808;
-UPDATE `creature_template` SET `AIName`='SmartAI' WHERE `entry` IN (@KORKRON, @SKYBREAKER);
-DELETE FROM `smart_scripts` WHERE `source_type`=0 AND `entryorguid` IN (@KORKRON, @SKYBREAKER);
-INSERT INTO `smart_scripts` (`entryorguid`,`source_type`,`id`,`link`,`event_type`,`event_phase_mask`,`event_chance`,`event_flags`,`event_param1`,`event_param2`,`event_param3`,`event_param4`,`action_type`,`action_param1`,`action_param2`,`action_param3`,`action_param4`,`action_param5`,`action_param6`,`target_type`,`target_param1`,`target_param2`,`target_param3`,`target_x`,`target_y`,`target_z`,`target_o`,`comment`) VALUES
-(@KORKRON,0,0,0,1,0,100,1,1000,1000,1000,1000,11,@HSPELL,2,0,0,0,0,1,0,0,0,0,0,0,0, 'Kor''kron Battle Standard - On spawn & reset - Cast spell 69809'),
-(@SKYBREAKER,0,0,0,1,0,100,1,1000,1000,1000,1000,11,@ASPELL,2,0,0,0,0,1,0,0,0,0,0,0,0, 'Skybreaker Battle Standard - On spawn & reset - Cast spell 69808');
-
--- Some tools
-instance->SendEncounterUnit(ENCOUNTER_FRAME_ADD, keleseth);
-Add an encounter frame
-*/
