@@ -198,7 +198,7 @@ class instance_icecrown_citadel : public InstanceMapScript
                     case NPC_KORKRON_PRIMALIST:
                         if (TeamInInstance == ALLIANCE)
                             creature->UpdateEntry(NPC_SKYBREAKER_HIEROPHANT, ALLIANCE);
-                        break
+                        break;
                     case NPC_KORKRON_DEFENDER:
                         if (TeamInInstance == ALLIANCE)
                             creature->UpdateEntry(NPC_SKYBREAKER_PROTECTOR, ALLIANCE);
@@ -424,7 +424,7 @@ class instance_icecrown_citadel : public InstanceMapScript
                     case NPC_SKYBREAKER_VINDICATOR:
                     case NPC_SKYBREAKER_SORCERER:
                         if (TeamInInstance == HORDE)
-                            RampartsOfSkullsTrashCount++;
+                            RampartOfSkullsTrashCount++;
                         break;
                     default:
                         break;
@@ -798,13 +798,13 @@ class instance_icecrown_citadel : public InstanceMapScript
                 switch (type)
                 {
                     case DATA_FIRST_SQUAD_ASSISTED:
-                        FirstSquadAssisted = state;
+                        FirstSquadAssisted = data;
                         break;
                     case DATA_SECOND_SQUAD_ASSISTED:
-                        SecondSquadAssisted = state;
+                        SecondSquadAssisted = data;
                         break;
                     case DATA_RAMPART_TRASH_COUNT:
-                        RampartOfSkullsTrashCount = state;
+                        RampartOfSkullsTrashCount = data;
                     case DATA_BONED_ACHIEVEMENT:
                         IsBonedEligible = data ? true : false;
                         break;
@@ -1126,8 +1126,7 @@ class instance_icecrown_citadel : public InstanceMapScript
 
                 std::ostringstream saveStream;
                 saveStream << "I C " << GetBossSaveData() << HeroicAttempts << " "
-                    << ColdflameJetsState << " " << BloodQuickeningState << " " << BloodQuickeningMinutes << " "
-                    << RampartOfSkullsTrashCount;
+                    << ColdflameJetsState << " " << BloodQuickeningState << " " << BloodQuickeningMinutes;
 
                 OUT_SAVE_INST_DATA_COMPLETE;
                 return saveStream.str();
@@ -1168,15 +1167,6 @@ class instance_icecrown_citadel : public InstanceMapScript
                     loadStream >> temp;
                     BloodQuickeningState = temp ? DONE : NOT_STARTED;   // DONE means finished (not success/fail)
                     loadStream >> BloodQuickeningMinutes;
-
-                    loadStream >> RampartOfSkullsTrashCount;
-
-                    if (RampartOfSkullsTrashCount >= REQUIRED_TRASH_FIRST_SQUAD)
-                    {
-                        FirstSquadAssisted = true;
-                        if (RampartOfSkullsTrashCount >= REQUIRED_TRASH_SECOND_SQUAD)
-                            SecondSquadAssisted = true;
-                    }
                 }
                 else
                     OUT_LOAD_INST_DATA_FAIL;
@@ -1211,13 +1201,13 @@ class instance_icecrown_citadel : public InstanceMapScript
                 }
             }
 
-            Transport* CreateTransport(uint32 goEntry, uint32 period)
+            /*void CreateTransport(uint32 goEntry, uint32 period)
             {
                 const GameObjectTemplate* goInfo = sObjectMgr->GetGameObjectTemplate(goEntry);
                 if (!goInfo)
                 {
                     sLog->outErrorDb("Transport ID: %u, Name: %s, will not be loaded, gameobject_template missing", goEntry, goInfo->name.c_str());
-                    return NULL;
+                    return;
                 }
                 Transport *t = new Transport(period, goInfo->ScriptId);
 
@@ -1226,7 +1216,7 @@ class instance_icecrown_citadel : public InstanceMapScript
                 {
                     sLog->outErrorDb("Transport (path id %u) path size = 0. Transport ignored, check DBC files or the gameobject's data0 field.", goInfo->moTransport.taxiPathId);
                     delete t;
-                    return NULL;
+                    return;
                 }
 
                 uint32 transportLowGuid = sObjectMgr->GenerateLowGuid(HIGHGUID_MO_TRANSPORT);
@@ -1234,11 +1224,9 @@ class instance_icecrown_citadel : public InstanceMapScript
                 if (!t->Create(transportLowGuid, goEntry, t->m_WayPoints[0].mapid, t->m_WayPoints[0].x, t->m_WayPoints[0].y, t->m_WayPoints[0].z, 0.0f, 0, 0))
                 {
                     delete t;
-                    return NULL;
+                    return;
                 }
-
-                return t;
-            }
+            }*/
 
         protected:
             std::set<uint64> ColdflameJetGUIDs;

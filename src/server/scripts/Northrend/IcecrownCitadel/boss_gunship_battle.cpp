@@ -188,12 +188,7 @@ class npc_muradin_gunship : public CreatureScript
             InstanceScript* pInstance = pCreature->GetInstanceScript();
             if (pInstance && pInstance->GetBossState(DATA_GUNSHIP_EVENT) != DONE)
             {
-                if (!pCreature->GetTransport())
-                    pPlayer->ADD_GOSSIP_ITEM(0, "Call the Skybreaker", 631, 1);
-                else
-                    pPlayer->ADD_GOSSIP_ITEM(0, "My companions are all accounted for, Muradin. Let's go!", 631, 2);
-
-                pPlayer->ADD_GOSSIP_ITEM(0, "Despawn the Skybreaker", 631, 3);
+                pPlayer->ADD_GOSSIP_ITEM(0, "My companions are all accounted for, Muradin. Let's go!", 631, 1001);
                 pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
                 return true;
             }
