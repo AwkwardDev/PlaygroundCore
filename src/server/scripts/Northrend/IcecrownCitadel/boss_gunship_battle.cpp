@@ -58,11 +58,11 @@ enum Spells
     SPELL_DESPERATE_RESOLVE_25H    = 72538, // --------
 
     // Kor'kron Sergeant & Skybreaker Sergeant
-    SPELL_BLADESTORM             = 69652,
-    SPELL_WOUNDING_STRIKE_10N    = 69651,
-    SPELL_WOUNDING_STRIKE_10H    = 72569,
-    SPELL_WOUNDING_STRIKE_25N    = 72570,
-    SPELL_WOUNDING_STRIKE_25H    = 72571,
+    SPELL_BLADESTORM               = 69652,
+    SPELL_WOUNDING_STRIKE_10N      = 69651,
+    SPELL_WOUNDING_STRIKE_10H      = 72569,
+    SPELL_WOUNDING_STRIKE_25N      = 72570,
+    SPELL_WOUNDING_STRIKE_25H      = 72571,
 
     // Kor'kron Axethrower & Skybreaker Rifleman
     SPELL_SHOOT_10N                = 70162,
