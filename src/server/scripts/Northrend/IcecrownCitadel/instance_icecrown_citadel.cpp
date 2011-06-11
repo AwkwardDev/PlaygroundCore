@@ -414,7 +414,6 @@ class instance_icecrown_citadel : public InstanceMapScript
                         if (TeamInInstance == ALLIANCE)
                             RampartOfSkullsTrashCount++;
                         break;
-                    case NPC_SKYBREAKER_HIEROPHANT:
                     case NPC_SKYBREAKER_PROTECTOR:
                     case NPC_SKYBREAKER_SUMMONER:
                     case NPC_SKYBREAKER_LIGHT:
@@ -423,6 +422,7 @@ class instance_icecrown_citadel : public InstanceMapScript
                     case NPC_SKYBREAKER_VICAR:
                     case NPC_SKYBREAKER_VINDICATOR:
                     case NPC_SKYBREAKER_SORCERER:
+                    case NPC_SKYBREAKER_HIEROPHANT:
                         if (TeamInInstance == HORDE)
                             RampartOfSkullsTrashCount++;
                         break;
@@ -1201,8 +1201,10 @@ class instance_icecrown_citadel : public InstanceMapScript
                 }
             }
 
-            /*void CreateTransport(uint32 goEntry, uint32 period)
+            void CreateTransport(uint32 goEntry, uint32 period)
             {
+                return;
+            }/*
                 const GameObjectTemplate* goInfo = sObjectMgr->GetGameObjectTemplate(goEntry);
                 if (!goInfo)
                 {

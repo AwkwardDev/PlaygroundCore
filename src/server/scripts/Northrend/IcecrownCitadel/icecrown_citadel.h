@@ -159,7 +159,7 @@ enum CreaturesIds
 
     // Ramparts of Skulls
     NPC_KORKRON_PRIMALIST                       = 37030,
-    NPC_SKYBREAKER_HIEROPHANT                   = 37029,
+    NPC_SKYBREAKER_HIEROPHANT                   = 37027,
     NPC_KORKRON_DEFENDER                        = 37032,
     NPC_SKYBREAKER_PROTECTOR                    = 36998,
     NPC_KORKRON_NECROLYTE                       = 37149,
@@ -426,6 +426,8 @@ enum AreaTriggers
 {
     AREATRIGGER_RAMPARTS_BOTTOMLEFT = 5628,
     AREATRIGGER_RAMPARTS_TOPLEFT    = 5629,
+    AREATRIGGER_RAMPARTS_BOTTOMRIGHT= 5630,
+    AREATRIGGER_RAMPARTS_TOPRIGHT   = 5631,
 };
 
 class spell_trigger_spell_from_caster : public SpellScriptLoader

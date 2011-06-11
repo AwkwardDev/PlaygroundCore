@@ -33,8 +33,10 @@ enum Spells
     SPELL_OVERHEAT              = 69487,
 
     // Canon de la cannonière ( 2 en 10, 4 en 25)
-    SPELL_CANNON_BLAST          = 69400,
-    SPELL_INCINERATING_BLAST    = 69402,
+    SPELL_CANNON_BLAST_H        = 69399,
+    SPELL_CANNON_BLAST_A        = 70172,
+    SPELL_INCINERATING_BLAST_H  = 69401,
+    SPELL_INCINERATING_BLAST_A  = 70174,
 
     // High Overlord Saurcroc / Muradin Bronzebeard
     SPELL_CLEAVE                = 15284,
@@ -42,7 +44,8 @@ enum Spells
     SPELL_RENDING_THROW         = 70309,
 
     // All troops
-    SPELL_BURNING_PITCH         = 71335,
+    SPELL_BURNING_PITCH_HORDE   = 71339, // Horde
+
     // From WowWiki :
     // All enemy NPCs except the Commanders (Muradin / Saurfang) and the Battle-Mage/Sorceror gain 
     // experience the longer they are left alive, starting from Regular and progressing to Experienced, 
@@ -65,17 +68,11 @@ enum Spells
     SPELL_WOUNDING_STRIKE_25H      = 72571,
 
     // Kor'kron Axethrower & Skybreaker Rifleman
-    SPELL_SHOOT_10N                = 70162,
-    SPELL_SHOOT_10H                = 72567,
-    SPELL_SHOOT_25N                = 72566,
-    SPELL_SHOOT_25H                = 72568,
-    SPELL_HURL_AXE_10N             = 70161,
-    SPELL_HURL_AXE_10H             = 72540,
-    SPELL_HURL_AXE_25N             = 72539,
-    SPELL_HURL_AXE_25H             = 72541,
+    SPELL_SHOOT                    = 70162,
+    SPELL_HURL_AXE                 = 70161,
 
     // Skybreaker Sorcerer / Kor'kron Battle-Mage 
-    SPELL_BELOW_ZERO            = 69705,
+    SPELL_BELOW_ZERO               = 69705,
     
     // Skybreaker Mortar Soldier / Kor'kron Rocketeer 
     SPELL_ROCKET_ARTILLERY         = 69679,
@@ -103,6 +100,11 @@ enum ExperienceEvents
     EVENT_BOARDING_PLAYERS_SHIP,
     EVENT_NEW_MORTAR_TEAM_SPAWNED_ROCKETEERS,
     EVENT_NEW_MAGE,
+
+    EVENT_FIRST_SQUAD_ASSISTED_1,
+    EVENT_FIRST_SQUAD_ASSISTED_2,
+    EVENT_SECOND_SQUAD_ASSISTED_1,
+    EVENT_SECOND_SQUAD_ASSISTED_2,
 
     EVENT_INTRO_HORDE_0, // High Overlord Saurfang yells: Rise up, sons and daughters of the Horde! Today we battle a hated enemy of the Horde! LOK'TAR OGAR! Kor'kron, take us out!
     EVENT_INTRO_HORDE_1, // High Overlord Saurfang yells: What is that?! Something approaching in the distance! 
@@ -172,8 +174,6 @@ enum Texts
 #define AURA_BATTLE_FURY_HELPER            RAID_MODE<uint32>(72306, 72307, 72306, 72307)
 #define SPELL_WOUNDING_STRIKE_HELPER       RAID_MODE<uint32>(69651, 72569, 72570, 72571)
 #define SPELL_DESPERATE_RESOLVE_HELPER     RAID_MODE<uint32>(69647, 72537, 72536, 72538)
-#define SPELL_SHOOT_HELPER                 RAID_MODE<uint32>(70162, 72567, 72566, 72568)
-#define SPELL_HURL_AXE_HELPER              RAID_MODE<uint32>(70161, 72540, 72539, 72541)
 
 /* Muradin event starter */
 /* Todo: remove the spawning system from him and apply it the the squads. pInstance->CreateTransport() */
@@ -205,7 +205,7 @@ class npc_muradin_gunship : public CreatureScript
                 uint32 goEntry = 201811; // Horde: 201812
                 uint32 period = 51584;
 
-                Transport* playersBoat = pInstance->CreateTransport(goEntry, 51584);
+                Transport* playersBoat = pCreature->GetInstanceScript()->CreateTransport(goEntry, 51584);
                 playersBoat->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE);
                 playersBoat->SetGoState(GO_STATE_READY);
                 // Add it to the grid in case TC uses it to track transports
@@ -397,7 +397,7 @@ class npc_korkron_axethrower : public CreatureScript
                 events.Update(diff);
 
                 if (!me->HasUnitState(UNIT_STAT_CASTING))
-                    DoCast(me->getVictim(), SPELL_HURL_AXE_HELPER);
+                    DoCast(me->getVictim(), SPELL_HURL_AXE);
 
                 while (uint32 eventId = events.ExecuteEvent())
                 {
@@ -454,7 +454,7 @@ class npc_skybreaker_rifleman : public CreatureScript
                 events.Update(diff);
 
                 if (!me->HasUnitState(UNIT_STAT_CASTING))
-                    DoCast(me->getVictim(), SPELL_SHOOT_HELPER);
+                    DoCast(me->getVictim(), SPELL_SHOOT);
 
                 while (uint32 eventId = events.ExecuteEvent())
                 {
@@ -504,17 +504,78 @@ class npc_korkron_primalist: public CreatureScript
             void Reset()
             {
                 ScriptedAI::Reset();
+                events.ScheduleEvent(EVENT_WRATH, 20000) // TODO: Fix the timers
+
             }
 
             void UpdateAI(const uint32 diff)
             {
                 if (!instance)
                     return;
-                
-                if (!instance->GetData(DATA_FIRST_SQUAD_ASSISTED)) // boolean, true = done
+
+                if (instance->GetData(DATA_TEAM_IN_INSTANCE) == HORDE)
                 {
-                    instance->SetData(DATA_FIRST_SQUAD_ASSISTED, true);
-                    Talk(SAY_FIRST_SQUAD_RESCUED);
+                    if (!instance->GetData(DATA_FIRST_SQUAD_ASSISTED)) // boolean, true = done
+                    {
+                        instance->SetData(DATA_FIRST_SQUAD_ASSISTED, true);
+                        events.ScheduleEvent(EVENT_FIRST_SQUAD_ASSISTED_1, 100);
+                        events.ScheduleEvent(EVENT_FIRST_SQUAD_ASSISTED_2, 15000); // TODO : fix the timer
+                    }
+                }
+
+                while (uint32 eventId = events.ExecuteEvent())
+                {
+                    switch (eventId)
+                    {
+                        case EVENT_FIRST_SQUAD_ASSISTED_1:
+                            Talk(TALK_FIRST_SQUAD_RESCUED_HORDE_0);
+                            break;
+                        case EVENT_FIRST_SQUAD_ASSISTED_2:
+                            // Will this work ? :s
+                            if (Unit* tempUnit = me->FindNearestCreature(NPC_KORKRON_INVOKER, 50.0f, true))
+                                if (CAST_AI(ScriptedAI, tempUnit->GetAI()))
+                                    CAST_AI(ScriptedAI, tempUnit->GetAI())->Talk(TALK_FIRST_SQUAD_RESCUED_HORDE_1);
+                            break;
+                        case EVENT_WRATH:
+                            if (me->isInCombat())
+                                me->CastSpell(me->getVictim(), SPELL_WRATH);
+                            events.ScheduleEvent(EVENT_WRATH, 20000);
+                            break;
+                        case EVENT_HEAL:
+                            if (me->isInCombat())
+                            {
+                                std::list<Unit*> TargetList;
+                                Unit* finalTarget = NULL;
+                                Trinity::AnyFriendlyUnitInObjectRangeCheck checker(me, me, 30.0f);
+                                Trinity::UnitListSearcher<Trinity::AnyFriendlyUnitInObjectRangeCheck> searcher(me, TargetList, checker);
+                                me->VisitNearbyObject(30.0f, searcher);
+                                for (std::list<Unit*>::iterator itr = TargetList.begin(); itr != TargetList.end(); ++itr)
+                                {
+                                    if (finalTarget == NULL)
+                                    {
+                                        finalTarget = *itr;
+                                        continue;
+                                    }
+
+                                    if ((*itr)->GetHealthPct() < finalTarget->GetHealthPct())
+                                        finalTarget = *itr;
+                                }
+
+                                if (me->GetHealthPct() < (*itr)->GetHealthPct())
+                                    finalTarget = me;
+
+                                uint32 spellId = SPELL_REJUVENATION;
+                                uint32 healthPct = finalTarget->GetHealthPct();
+                                if (healthPct > 10 && healthPct < 15)
+                                    spellId = SPELL_HEALING_TOUCH;
+                                else if (healthPct >= 15 && healthPct < 40)
+                                    spellId = SPELL_REGROWTH;
+
+                                me->CastSpell(finalTarget, spellId);
+                                events.ScheduleEvent(EVENT_HEAL, 25000);
+                            }
+                            break;
+                    }
                 }
             }
 
