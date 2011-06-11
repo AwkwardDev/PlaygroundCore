@@ -174,6 +174,8 @@ enum CreaturesIds
     NPC_SKYBREAKER_VICAR                        = 37021,
     NPC_KORKRON_VANQUISHER                      = 37035,
     NPC_SKYBREAKER_VINDICATOR                   = 37003,
+    NPC_KORKRON_INVOKER                         = 37033,
+    NPC_SKYBREAKER_SORCERER                     = 37026,
 
     // Deathbringer Saurfang
     NPC_DEATHBRINGER_SAURFANG                   = 37813,
@@ -420,11 +422,11 @@ enum WorldStatesICC
     WORLDSTATE_ATTEMPTS_MAX         = 4942,
 };
 
-enum TrashCount
+enum AreaTriggers
 {
-    REQUIRED_TRASH_FIRST_SQUAD = ;
-    REQUIRED_TRASH_SECOND_SQUAD = ;
-}
+    AREATRIGGER_RAMPARTS_BOTTOMLEFT = 5628,
+    AREATRIGGER_RAMPARTS_TOPLEFT    = 5629,
+};
 
 class spell_trigger_spell_from_caster : public SpellScriptLoader
 {

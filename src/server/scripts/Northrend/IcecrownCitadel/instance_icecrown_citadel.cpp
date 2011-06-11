@@ -227,6 +227,10 @@ class instance_icecrown_citadel : public InstanceMapScript
                         if (TeamInInstance == ALLIANCE)
                             creature->UpdateEntry(NPC_SKYBREAKER_VINDICATOR, ALLIANCE);
                         break;
+                    case NPC_KORKRON_INVOKER:
+                        if (TeamInInstance == ALLIANCE)
+                            creature->UpdateEntry(NPC_SKYBREAKER_SORCERER, ALLIANCE);
+                        break;
                     case NPC_SKYBREAKER_HIEROPHANT:
                         if (TeamInInstance == HORDE)
                             creature->UpdateEntry(NPC_KORKRON_PRIMALIST, HORDE);
@@ -258,6 +262,10 @@ class instance_icecrown_citadel : public InstanceMapScript
                     case NPC_SKYBREAKER_VINDICATOR:
                         if (TeamInInstance == HORDE)
                             creature->UpdateEntry(NPC_KORKRON_VANQUISHER, HORDE);
+                        break;
+                    case NPC_SKYBREAKER_SORCERER:
+                        if (TeamInInstance == HORDE)
+                            creature->UpdateEntry(NPC_KORKRON_INVOKER, HORDE);
                         break;
                     case NPC_DEATHBRINGER_SAURFANG:
                         DeathbringerSaurfangGUID = creature->GetGUID();
@@ -402,6 +410,7 @@ class instance_icecrown_citadel : public InstanceMapScript
                     case NPC_KORKRON_SNIPER:
                     case NPC_KORKRON_TEMPLAR:
                     case NPC_KORKRON_VANQUISHER:
+                    case NPC_KORKRON_INVOKER:
                         if (TeamInInstance == ALLIANCE)
                             RampartOfSkullsTrashCount++;
                         break;
@@ -413,6 +422,7 @@ class instance_icecrown_citadel : public InstanceMapScript
                     case NPC_SKYBREAKER_MARKSMAN:
                     case NPC_SKYBREAKER_VICAR:
                     case NPC_SKYBREAKER_VINDICATOR:
+                    case NPC_SKYBREAKER_SORCERER:
                         if (TeamInInstance == HORDE)
                             RampartsOfSkullsTrashCount++;
                         break;
