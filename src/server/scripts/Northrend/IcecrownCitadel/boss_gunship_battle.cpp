@@ -28,84 +28,34 @@ const Position npcPositions[] =
 
 enum Spells
 {
-    AURA_ON_OGRIM_HAMMER        = 70121,
-    AURA_ON_SKYBREAKERS_DECK    = 70120,
-    SPELL_OVERHEAT              = 69487,
+    SPELL_ON_ORGRIMS_HAMMERS_DECK  = 70121,
+    SPELL_ON_SKYBREAKERS_DECK      = 70120,
 
-    // Canon de la cannonière ( 2 en 10, 4 en 25)
-    SPELL_CANNON_BLAST_H        = 69399,
-    SPELL_CANNON_BLAST_A        = 70172,
-    SPELL_INCINERATING_BLAST_H  = 69401,
-    SPELL_INCINERATING_BLAST_A  = 70174,
+    // Achievement spell required target
+    SPELL_ACHIEVEMENT              = 72959, 
 
-    // High Overlord Saurcroc / Muradin Bronzebeard
-    SPELL_CLEAVE                = 15284,
-    SPELL_TASTE_FOR_BLOOD       = 69634,
-    SPELL_RENDING_THROW         = 70309,
+    // Rampart of Skulls Shared NPCs spells
+    SPELL_WRATH                       = 69968,
+    SPELL_HEALING_TOUCH               = 69899,
+    SPELL_REGROWTH                   = 69882,
+    SPELL_REJUVENATION               = 69898,
 
-    // All troops
-    SPELL_BURNING_PITCH_HORDE   = 71339, // Horde
+    // Kor'kron Battle-mage & Skybreaker Sorcerer
+    SPELL_BELOW_ZERO               = 69705,
 
-    // From WowWiki :
-    // All enemy NPCs except the Commanders (Muradin / Saurfang) and the Battle-Mage/Sorceror gain 
-    // experience the longer they are left alive, starting from Regular and progressing to Experienced, 
-    // then Veteran, and finally Elite. Depending on rank, damage and attack speed are increased. 
-    SPELL_EXPERIENCED            = 71188, // ~20 sec
-    SPELL_VETERAN                = 71193, // ~40 sec
-    SPELL_ELITE                  = 71195, // ~60 sec
-    
-    // Skybreaker Marine / Kor'kron Reaver / Skybreaker Sergeant / Kor'kron Sergeant 
-    SPELL_DESPERATE_RESOLVE_10N    = 69647, // HP < 20%
-    SPELL_DESPERATE_RESOLVE_10H    = 72537, // --------
-    SPELL_DESPERATE_RESOLVE_25N    = 72536, // --------
-    SPELL_DESPERATE_RESOLVE_25H    = 72538, // --------
-
-    // Kor'kron Sergeant & Skybreaker Sergeant
-    SPELL_BLADESTORM               = 69652,
-    SPELL_WOUNDING_STRIKE_10N      = 69651,
-    SPELL_WOUNDING_STRIKE_10H      = 72569,
-    SPELL_WOUNDING_STRIKE_25N      = 72570,
-    SPELL_WOUNDING_STRIKE_25H      = 72571,
+    // Experience spells
+    SPELL_EXPERIENCED               = 71188,
+    SPELL_VETERAN                   = 71193,
+    SPELL_ELITE                       = 71195,
+    SPELL_DESPERATE_RESOLVE           = 69647,
 
     // Kor'kron Axethrower & Skybreaker Rifleman
-    SPELL_SHOOT                    = 70162,
-    SPELL_HURL_AXE                 = 70161,
-
-    // Skybreaker Sorcerer / Kor'kron Battle-Mage 
-    SPELL_BELOW_ZERO               = 69705,
-    
-    // Skybreaker Mortar Soldier / Kor'kron Rocketeer 
-    SPELL_ROCKET_ARTILLERY         = 69679,
-    SPELL_ROCKET_ARTILLERY_TARGET_ALLIANCE    = 69678, // Requires Target Aura Spell (70120) Sur le pont du Brise-ciel
-    SPELL_ROCKET_ARTILLERY_TARGET_HORDE       = 70609, // Requires Target Aura Spell (70121) Sur le pont du Marteau d'Orgrim
-    SPELL_EXPLOSION                = 69680, // Triggered by the previous one when it hits the ground
-    SPELL_TARGET_MARKER            = 71371, // Triggered by 69679 when it is CAST
-
-    // Achievement
-    SPELL_ACHIEVEMENT              = 72959, // You must be a target for this spell to get the achievement
+    SPELL_HURL_AXE                   = 70161,
+    SPELL_SHOOT                       = 70162,
 };
 
-enum ExperienceEvents
+enum Events
 {
-    // Shared AI Events
-    EVENT_EXPERIENCED            = 0,
-    EVENT_VETERAN,
-    EVENT_ELITE,
-
-    // Muradin / Saurfang
-    EVENT_CLEAVE,
-    EVENT_TASTE_FOR_BLOOD,
-    EVENT_RENDING_THROW,
-    EVENT_NEW_RIFLEMEN_AXETHROWER,
-    EVENT_BOARDING_PLAYERS_SHIP,
-    EVENT_NEW_MORTAR_TEAM_SPAWNED_ROCKETEERS,
-    EVENT_NEW_MAGE,
-
-    EVENT_FIRST_SQUAD_ASSISTED_1,
-    EVENT_FIRST_SQUAD_ASSISTED_2,
-    EVENT_SECOND_SQUAD_ASSISTED_1,
-    EVENT_SECOND_SQUAD_ASSISTED_2,
-
     EVENT_INTRO_HORDE_0, // High Overlord Saurfang yells: Rise up, sons and daughters of the Horde! Today we battle a hated enemy of the Horde! LOK'TAR OGAR! Kor'kron, take us out!
     EVENT_INTRO_HORDE_1, // High Overlord Saurfang yells: What is that?! Something approaching in the distance! 
     EVENT_INTRO_HORDE_2, // High Overlord Saurfang yells: ALLIANCE GUNSHIP! ALL HANDS ON DECK!
@@ -121,20 +71,22 @@ enum ExperienceEvents
     EVENT_INTRO_ALLIANCE_6, // High Overlord Saurfang yells: This is not your battle, dwarf. Back down or we will be forced to destroy your ship.
     EVENT_INTRO_ALLIANCE_7, // Muradin Bronzebeard yells: Not me battle? I dunnae who ye﻿ think ye are, mister, but I got a score to settle with Arthas and yer not gettin' in me way! FIRE ALL GUNS! FIRE! FIRE!
 
-    // Skybreaker Marine & Kor'kron Reaver & Skybreaker Sergeant & Kor'kron Sergeant 
-    EVENT_DESPERATE_RESOLVE,
+    // Rampart of Skulls NPCs Events
+    EVENT_WRATH,
+    EVENT_HEAL,
 
-    // Kor'kron Sergeant & Skybreaker Sergeant
-    EVENT_BLADESTORM,
-    EVENT_WOUNDING_STRIKE,
+    // First Squad Assisted
+    EVENT_FIRST_SQUAD_ASSISTED_1,
+    EVENT_FIRST_SQUAD_ASSISTED_2,
 
-    // Kor'kron Axethrower
-    EVENT_SHOOT,
-    // Skybreaker Rifleman
+    // Shared experience events
+    EVENT_EXPERIENCED,
+    EVENT_VETERAN,
+    EVENT_ELITE,
+
+    // Kor'kron Axethrower & Skybreaker Rifleman
     EVENT_HURL_AXE,
-
-    // Skybreaker Mortar Soldier & Kor'kron Rocketeer
-    EVENT_ROCKET_ARTILLERY,
+    EVENT_SHOOT,
 };
 
 enum Texts
@@ -171,10 +123,6 @@ enum Texts
     TALK_INTRO_HORDE_4                  = 4,
 };
 
-#define AURA_BATTLE_FURY_HELPER            RAID_MODE<uint32>(72306, 72307, 72306, 72307)
-#define SPELL_WOUNDING_STRIKE_HELPER       RAID_MODE<uint32>(69651, 72569, 72570, 72571)
-#define SPELL_DESPERATE_RESOLVE_HELPER     RAID_MODE<uint32>(69647, 72537, 72536, 72538)
-
 /* Muradin event starter */
 /* Todo: remove the spawning system from him and apply it the the squads. pInstance->CreateTransport() */
 /* Also add a method to position the gunship depending on the encounter state : See m_Waypoints */
@@ -200,35 +148,7 @@ class npc_muradin_gunship : public CreatureScript
         {
             player->PlayerTalkClass->ClearMenus();
             player->CLOSE_GOSSIP_MENU();
-            if (action == 1) // Call the boat
-            {
-                uint32 goEntry = 201811; // Horde: 201812
-                uint32 period = 51584;
-
-                Transport* playersBoat = pCreature->GetInstanceScript()->CreateTransport(goEntry, 51584);
-                playersBoat->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE);
-                playersBoat->SetGoState(GO_STATE_READY);
-                // Add it to the grid in case TC uses it to track transports
-                Map* tMap = player->GetMap();
-                playersBoat->SetMap(tMap);
-                playersBoat->AddToWorld();
-
-                // Transmit creation packet to all players on the map
-                for (Map::PlayerList::const_iterator itr = tMap->GetPlayers().begin(); itr != tMap->GetPlayers().end(); ++itr)
-                    if (Player* pPlayer = itr->getSource())
-                    {
-                        UpdateData transData;
-                        playersBoat->BuildCreateUpdateBlockForPlayer(&transData, pPlayer);
-                        WorldPacket packet;
-                        transData.BuildPacket(&packet);
-                        pPlayer->SendDirectMessage(&packet);
-                    }
-                
-                sMapMgr->m_Transports.insert(playersBoat);
-                playersBoat->Update(1);
-                playersBoat->BuildStopMovePacket(tMap);
-            }
-            else if (action == 2) // Make the boat move
+            if (action == 1001) // Make the boat move
             {
                 if (Transport* playersBoat = pCreature->GetTransport())
                 {    
@@ -251,42 +171,8 @@ class npc_muradin_gunship : public CreatureScript
                             pPlayer->GetSession()->SendPacket(&packet);
                         }
 
-                    // skybreaker->BuildStopMovePacket(tMap);
+                    // skybreaker->BuildStopMovePacket(tMap); // Nope, we're testin'
                 }    
-            }
-            // Despawn the skybreaker (debug gossip option)
-            else if (action == 3)
-            {
-                Transport* playersBoat = pCreature->GetTransport();
-                if (!playersBoat)
-                    return true;
-
-                sMapMgr->m_Transports.erase(playersBoat);
-                for (Transport::PlayerSet::const_iterator itr = playersBoat->GetPassengers().begin(); itr != playersBoat->GetPassengers().end(); ++itr)
-                {
-                    playersBoat->RemovePassenger(*itr);
-                    if (Player* plr = *itr)
-                        plr->SetTransport(NULL);
-                }
-                // Uncomment and fix this when NPC passengers will be added
-                /*
-                for (Transport::CreatureSet::iterator itr = playersBoat->m_NPCPassengerSet.begin(); itr != playersBoat->m_NPCPassengerSet.end();)
-                    if (Creature *npc = *(itr++))
-                        npc->AddObjectToRemoveList();
-
-                skybreaker->m_NPCPassengerSet.clear();
-                */
-                UpdateData transData;
-                playersBoat->BuildOutOfRangeUpdateBlock(&transData);
-                WorldPacket out_packet;
-                transData.BuildPacket(&out_packet);
-
-                for (Map::PlayerList::const_iterator itr = playersBoat->GetMap()->GetPlayers().begin(); itr != playersBoat->GetMap()->GetPlayers().end(); ++itr)
-                    if (playersBoat != itr->getSource()->GetTransport())
-                        itr->getSource()->SendDirectMessage(&out_packet);
-
-                playersBoat->Delete();
-                playersBoat = NULL;
             }
 
             return true;
@@ -294,8 +180,42 @@ class npc_muradin_gunship : public CreatureScript
 
         private:
             InstanceScript* pInstance;
-            uint64 transportLowGuid;
             Transport* playersBoat;
+};
+
+/* Player's transport script */
+class transport_gunship : public TransportScript
+{
+    public:
+        transport_gunship() : TransportScript("transport_gunship") { }
+
+        void OnRelocate(Transport* transport, uint32 waypointId, uint32 mapId, float x, float y, float z)
+        {
+            sLog->outString("ICC::Gunship: Transport %s reached waypoint %u/%u. Position is X:%u, Y:%u, Z:%u.", GetName(), waypointId, transport->m_WayPoints.size(), x, y, z);
+        }
+
+        void OnAddPassenger(Transport* transport, Player* player)
+        {
+            if (InstanceScript* instance = transport->GetInstanceScript())
+            {
+                switch (instance->GetData(DATA_TEAM_IN_INSTANCE))
+                {
+                    case HORDE:
+                        player->AddAura(SPELL_ON_ORGRIMS_HAMMERS_DECK, player);
+                        break;
+                    case ALLIANCE:
+                        player->AddAura(SPELL_ON_SKYBREAKERS_DECK, player);
+                        break;
+                }
+            }
+        }
+
+        void OnRemovePassenger(Transport* transport, Player* player)
+        {
+            // Simply ...
+            player->RemoveAurasDueToSpell(SPELL_ON_ORGRIMS_HAMMERS_DECK);
+            player->RemoveAurasDueToSpell(SPELL_ON_SKYBREAKERS_DECK);
+        }
 };
 
 /* Zafod boombox */
@@ -504,7 +424,7 @@ class npc_korkron_primalist: public CreatureScript
             void Reset()
             {
                 ScriptedAI::Reset();
-                events.ScheduleEvent(EVENT_WRATH, 20000) // TODO: Fix the timers
+                events.ScheduleEvent(EVENT_WRATH, 20000); // TODO: Fix the timers
 
             }
 
@@ -538,40 +458,29 @@ class npc_korkron_primalist: public CreatureScript
                             break;
                         case EVENT_WRATH:
                             if (me->isInCombat())
-                                me->CastSpell(me->getVictim(), SPELL_WRATH);
+                                me->CastSpell(me->getVictim(), SPELL_WRATH, false);
                             events.ScheduleEvent(EVENT_WRATH, 20000);
                             break;
                         case EVENT_HEAL:
                             if (me->isInCombat())
                             {
                                 std::list<Unit*> TargetList;
-                                Unit* finalTarget = NULL;
+                                Unit* finalTarget = me;
                                 Trinity::AnyFriendlyUnitInObjectRangeCheck checker(me, me, 30.0f);
                                 Trinity::UnitListSearcher<Trinity::AnyFriendlyUnitInObjectRangeCheck> searcher(me, TargetList, checker);
                                 me->VisitNearbyObject(30.0f, searcher);
                                 for (std::list<Unit*>::iterator itr = TargetList.begin(); itr != TargetList.end(); ++itr)
-                                {
-                                    if (finalTarget == NULL)
-                                    {
-                                        finalTarget = *itr;
-                                        continue;
-                                    }
-
                                     if ((*itr)->GetHealthPct() < finalTarget->GetHealthPct())
                                         finalTarget = *itr;
-                                }
 
-                                if (me->GetHealthPct() < (*itr)->GetHealthPct())
-                                    finalTarget = me;
-
-                                uint32 spellId = SPELL_REJUVENATION;
+                                uint32 spellId = SPELL_HEALING_TOUCH;
                                 uint32 healthPct = finalTarget->GetHealthPct();
                                 if (healthPct > 10 && healthPct < 15)
-                                    spellId = SPELL_HEALING_TOUCH;
-                                else if (healthPct >= 15 && healthPct < 40)
                                     spellId = SPELL_REGROWTH;
+                                else if (healthPct > 40)
+                                    spellId = SPELL_REJUVENATION;
 
-                                me->CastSpell(finalTarget, spellId);
+                                me->CastSpell(finalTarget, spellId, false);
                                 events.ScheduleEvent(EVENT_HEAL, 25000);
                             }
                             break;
@@ -591,9 +500,10 @@ class npc_korkron_primalist: public CreatureScript
 };
 
 
+
 void AddSC_boss_gunship_battle()
 {
-    // new transport_gunship();
+    new transport_gunship();
     new npc_muradin_gunship();
     new npc_zafod_boombox();
     new npc_gunship_cannon();
