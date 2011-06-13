@@ -460,9 +460,8 @@ class npc_korkron_primalist: public CreatureScript
                             break;
                         case EVENT_FIRST_SQUAD_ASSISTED_2:
                             // Will this work ? :s
-                            if (Unit* tempUnit = me->FindNearestCreature(NPC_KORKRON_INVOKER, 50.0f, true))
-                                if (CAST_AI(ScriptedAI, tempUnit->GetAI()))
-                                    CAST_AI(ScriptedAI, tempUnit->GetAI())->Talk(TALK_FIRST_SQUAD_RESCUED_HORDE_1);
+                            if (Creature* tempUnit = me->FindNearestCreature(NPC_KORKRON_INVOKER, 50.0f, true))
+                                tempUnit->AI()->Talk(TALK_FIRST_SQUAD_RESCUED_HORDE_1);
                             break;
                         case EVENT_WRATH:
                             if (me->isInCombat())
