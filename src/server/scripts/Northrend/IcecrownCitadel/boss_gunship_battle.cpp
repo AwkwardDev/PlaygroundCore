@@ -38,6 +38,8 @@ enum Spells
 {
     // Cannon
     SPELL_OVERHEAT                    = 69487, // Triggers spell #69488 every 0.25s.
+    SPELL_CANNON_BLAST                  = 69399,
+    SPELL_INCINERATING_BLAST          = 69401,
 
     // Auras
     SPELL_ON_ORGRIMS_HAMMERS_DECK     = 70121,
@@ -459,13 +461,13 @@ class npc_korkron_primalist: public CreatureScript
                             Talk(TALK_FIRST_SQUAD_RESCUED_HORDE_0);
                             break;
                         case EVENT_FIRST_SQUAD_ASSISTED_2:
-                            // Will this work ? :s
                             if (Creature* tempUnit = me->FindNearestCreature(NPC_KORKRON_INVOKER, 50.0f, true))
                                 tempUnit->AI()->Talk(TALK_FIRST_SQUAD_RESCUED_HORDE_1);
                             break;
                         case EVENT_WRATH:
                             if (me->isInCombat())
-                                me->CastSpell(me->getVictim(), SPELL_WRATH, false);
+                                if (!me->getVictim()->IsFriendlyTo(me))
+                                    me->CastSpell(me->getVictim(), SPELL_WRATH, false);
                             events.ScheduleEvent(EVENT_WRATH, 20000);
                             break;
                         case EVENT_HEAL:
@@ -506,41 +508,28 @@ class npc_korkron_primalist: public CreatureScript
         }
 };
 
-class spell_below_zero : public SpellScriptLoader
+class spell_overheat : public SpellScriptLoader
 {
     public:
-        spell_below_zero() : SpellScriptLoader("spell_below_zero") { }
+        spell_overheat() : SpellScriptLoader("spell_overheat") { }
 
-        class spell_below_zero_AuraScript : public AuraScript
+        class spell_overheat_AuraScript : public AuraScript
         {
-            PrepareAuraScript(spell_below_zero_AuraScript);
+            PrepareAuraScript(spell_overheat_AuraScript);
 
-            // This AuraScript controls whether the unit is eligible to
-            // bool Player::canSeeSpellClickOn(Creature const *c)
-
-            void OnApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+            void OnApply(AuraEffect const* aurEff, AuraEffectHandleModes mode)
             {
-                if (Creature* vehicle = GetTarget()->ToCreature())
-                    vehicle->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
-            }
-
-            void OnRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
-            {
-                if (Creature* vehicle = GetTarget()->ToCreature())
-                    vehicle->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
-            }
-
-            void Register()
-            {
-                OnEffectApply += AuraEffectApplyFn(spell_below_zero_AuraScript::OnApply, EFFECT_0, SPELL_AURA_MOD_STUN, AURA_EFFECT_HANDLE_REAL);
-                OnEffectRemove += AuraEffectRemoveFn(spell_below_zero_AuraScript::OnRemove, EFFECT_0, SPELL_AURA_MOD_STUN, AURA_EFFECT_HANDLE_REAL);
+                Unit* target = GetTarget();
+                Unit* passenger = target->GetVehicle()->GetPassenger(1);
+                if (passenger->GetTypeId() == TYPEID_PLAYER)
+                {
+                    passenger->ToPlayer()->AddSpellCooldown(SPELL_CANNON_BLAST, 0, time(NULL) + 3000);
+                    passenger->ToPlayer()->AddSpellCooldown(SPELL_INCINERATING_BLAST, 0, time(NULL) + 3000);
+                }
             }
         };
 
-        AuraScript* GetAuraScript() const
-        {
-            return new spell_below_zero_AuraScript();
-        }
+
 };
 
 void AddSC_boss_gunship_battle()
@@ -551,5 +540,5 @@ void AddSC_boss_gunship_battle()
     new npc_gunship_cannon();
     new npc_korkron_axethrower();
     new npc_skybreaker_rifleman();
-    new spell_below_zero();
+    new spell_overheat();
 }
