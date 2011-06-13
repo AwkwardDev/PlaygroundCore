@@ -21,36 +21,48 @@
 #include "MapManager.h"
 #include "Transport.h"
 
-const Position npcPositions[] = 
+struct NPCsPositions
 {
-    {-472.596f, 2466.8701f, 190.7371f, 6.204f}, // Muradin on his ship
+    uint32 npcId; // `creature_template`.`entry`
+    // The positions should be set offseted from the transport's position.
+    Position positionPlayer; // Position if the creature is friendly with the players
+    Position positionEnemy; // Position if the creature is on the enemy ship
+};
+
+const NPCsPositions npcPositions[]=
+{
+    {36869, {-472.596f, 2466.8701f, 190.7371f, 6.204f}, {0.0f, 0.0f, 0.0f, 0.0f}}, // Muradin, player ship (Alliance team)
 };
 
 enum Spells
 {
-    SPELL_ON_ORGRIMS_HAMMERS_DECK  = 70121,
-    SPELL_ON_SKYBREAKERS_DECK      = 70120,
+    // Cannon
+    SPELL_OVERHEAT                    = 69487, // Triggers spell #69488 every 0.25s.
+
+    // Auras
+    SPELL_ON_ORGRIMS_HAMMERS_DECK     = 70121,
+    SPELL_ON_SKYBREAKERS_DECK         = 70120,
 
     // Achievement spell required target
-    SPELL_ACHIEVEMENT              = 72959, 
+    SPELL_ACHIEVEMENT                 = 72959,
 
     // Rampart of Skulls Shared NPCs spells
     SPELL_WRATH                       = 69968,
     SPELL_HEALING_TOUCH               = 69899,
-    SPELL_REGROWTH                   = 69882,
-    SPELL_REJUVENATION               = 69898,
+    SPELL_REGROWTH                    = 69882,
+    SPELL_REJUVENATION                = 69898,
 
     // Kor'kron Battle-mage & Skybreaker Sorcerer
-    SPELL_BELOW_ZERO               = 69705,
+    SPELL_BELOW_ZERO                  = 69705,
 
     // Experience spells
-    SPELL_EXPERIENCED               = 71188,
-    SPELL_VETERAN                   = 71193,
+    SPELL_EXPERIENCED                 = 71188,
+    SPELL_VETERAN                     = 71193,
     SPELL_ELITE                       = 71195,
     SPELL_DESPERATE_RESOLVE           = 69647,
 
     // Kor'kron Axethrower & Skybreaker Rifleman
-    SPELL_HURL_AXE                   = 70161,
+    SPELL_HURL_AXE                    = 70161,
     SPELL_SHOOT                       = 70162,
 };
 
@@ -272,9 +284,7 @@ class npc_gunship_cannon : public CreatureScript
             void SpellHit(Unit* caster, SpellEntry const* spellEntry)
             {
                 if (spellEntry->Id == SPELL_BELOW_ZERO)
-                {
                     me->GetVehicleKit()->RemoveAllPassengers();
-                }
             }
 
             void UpdateAI(const uint32 diff)
@@ -282,11 +292,6 @@ class npc_gunship_cannon : public CreatureScript
                 if (Powers powerType = me->getPowerType())
                     if (me->GetPower(powerType) == me->GetMaxPower(powerType))
                         DoCast(me, SPELL_OVERHEAT);
-
-                // Temp hack until I know how to disable the spellclick
-                // Maybe remove the vehicleBase ?
-                if (me->HasAura(SPELL_BELOW_ZERO))
-                    me->GetVehicleKit()->RemoveAllPassengers();
             }
         };
 };
@@ -499,7 +504,39 @@ class npc_korkron_primalist: public CreatureScript
         }
 };
 
+class spell_below_zero : public SpellScriptLoader
+{
+    public:
+        spell_below_zero() : SpellScriptLoader("spell_below_zero") { }
 
+        class spell_below_zero_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_below_zero_AuraScript);
+
+            void OnApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+            {
+				if (Creature* vehicle = GetTarget()->ToCreature())
+					vehicle->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+            }
+
+            void OnRemove(AuraEffect const* aurEff, AuraEffectHandleModes /*mode*/)
+            {
+				if (Creature* vehicle = GetTarget()->ToCreature())
+					vehicle->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+            }
+
+            void Register()
+            {
+                OnEffectApply += AuraEffectApplyFn(spell_below_zero_AuraScript::OnApply, EFFECT_0, SPELL_AURA_MOD_STUN, AURA_EFFECT_HANDLE_REAL);
+                OnEffectRemove += AuraEffectRemoveFn(spell_below_zero_AuraScript::OnRemove, EFFECT_0, SPELL_AURA_MOD_STUN, AURA_EFFECT_HANDLE_REAL);
+            }
+        };
+
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_below_zero_AuraScript();
+        }
+};
 
 void AddSC_boss_gunship_battle()
 {
@@ -509,4 +546,5 @@ void AddSC_boss_gunship_battle()
     new npc_gunship_cannon();
     new npc_korkron_axethrower();
     new npc_skybreaker_rifleman();
+	new spell_below_zero();
 }
