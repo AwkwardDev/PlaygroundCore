@@ -31,7 +31,7 @@ struct NPCsPositions
 
 const NPCsPositions npcPositions[]=
 {
-    {36869, {-472.596f, 2466.8701f, 190.7371f, 6.204f}, {0.0f, 0.0f, 0.0f, 0.0f}}, // Muradin, player ship (Alliance team)
+    {36948, {-472.596f, 2466.8701f, 190.7371f, 6.204f}, {0.0f, 0.0f, 0.0f, 0.0f}}, // Muradin, player ship (Alliance team)
 };
 
 enum Spells
@@ -119,6 +119,7 @@ enum Texts
     // -- These two are left to do
     // A screeching cry pierces the air above! (Widescreen Yellow Emote)
     // A Spire Frostwyrm lands just before Orgrim's Hammer. (Chat message)
+    // --
 
     // High Overlord Saurfang yells: Rise up, sons and daughters of the Horde! 
     // Today we battle a hated enemy of the Horde! LOK'TAR OGAR! Kor'kron, take us out!
@@ -184,7 +185,9 @@ class npc_muradin_gunship : public CreatureScript
                         }
 
                     // skybreaker->BuildStopMovePacket(tMap); // Nope, we're testin'
-                }    
+                }
+                else
+                    pCreature->MonsterYell("FUUUUU I'm not on my ship !", LANG_UNIVERSAL, 0);
             }
 
             return true;
@@ -513,16 +516,19 @@ class spell_below_zero : public SpellScriptLoader
         {
             PrepareAuraScript(spell_below_zero_AuraScript);
 
+            // This AuraScript controls whether the unit is eligible to
+            // bool Player::canSeeSpellClickOn(Creature const *c)
+
             void OnApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
             {
-				if (Creature* vehicle = GetTarget()->ToCreature())
-					vehicle->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+                if (Creature* vehicle = GetTarget()->ToCreature())
+                    vehicle->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
             }
 
-            void OnRemove(AuraEffect const* aurEff, AuraEffectHandleModes /*mode*/)
+            void OnRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
             {
-				if (Creature* vehicle = GetTarget()->ToCreature())
-					vehicle->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
+                if (Creature* vehicle = GetTarget()->ToCreature())
+                    vehicle->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_SPELLCLICK);
             }
 
             void Register()
@@ -546,5 +552,5 @@ void AddSC_boss_gunship_battle()
     new npc_gunship_cannon();
     new npc_korkron_axethrower();
     new npc_skybreaker_rifleman();
-	new spell_below_zero();
+    new spell_below_zero();
 }
