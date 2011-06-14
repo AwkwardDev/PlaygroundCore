@@ -38,7 +38,7 @@ enum Spells
 {
     // Cannon
     SPELL_OVERHEAT                    = 69487, // Triggers spell #69488 every 0.25s.
-    SPELL_CANNON_BLAST                  = 69399,
+    SPELL_CANNON_BLAST                = 69399,
     SPELL_INCINERATING_BLAST          = 69401,
 
     // Auras
@@ -314,9 +314,12 @@ class npc_korkron_axethrower : public CreatureScript
             void Reset()
             {
                 ScriptedAI::Reset();
-                events.ScheduleEvent(EVENT_EXPERIENCED, urand(19000, 21000)); // ~20 sec
-                events.ScheduleEvent(EVENT_VETERAN, urand(39000, 41000));     // ~40 sec
-                events.ScheduleEvent(EVENT_ELITE, urand(59000, 61000));       // ~60 sec
+                if (me->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == ALLIANCE)
+                {
+                    events.ScheduleEvent(EVENT_EXPERIENCED, urand(19000, 21000)); // ~20 sec
+                    events.ScheduleEvent(EVENT_VETERAN, urand(39000, 41000));     // ~40 sec
+                    events.ScheduleEvent(EVENT_ELITE, urand(59000, 61000));       // ~60 sec
+                }
             }
 
             void UpdateAI(const uint32 diff)
@@ -371,9 +374,12 @@ class npc_skybreaker_rifleman : public CreatureScript
             void Reset()
             {
                 ScriptedAI::Reset();
-                events.ScheduleEvent(EVENT_EXPERIENCED, urand(19000, 21000)); // ~20 sec
-                events.ScheduleEvent(EVENT_VETERAN, urand(39000, 41000));     // ~40 sec
-                events.ScheduleEvent(EVENT_ELITE, urand(59000, 61000));       // ~60 sec
+                if (me->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == HORDE)
+                {
+                    events.ScheduleEvent(EVENT_EXPERIENCED, urand(19000, 21000)); // ~20 sec
+                    events.ScheduleEvent(EVENT_VETERAN, urand(39000, 41000));     // ~40 sec
+                    events.ScheduleEvent(EVENT_ELITE, urand(59000, 61000));       // ~60 sec
+                }
             }
 
             void UpdateAI(const uint32 diff)
@@ -434,8 +440,8 @@ class npc_korkron_primalist: public CreatureScript
             void Reset()
             {
                 ScriptedAI::Reset();
-                events.ScheduleEvent(EVENT_WRATH, 20000); // TODO: Fix the timers
-
+                events.ScheduleEvent(EVENT_WRATH, 10000); // TODO: Fix the timers
+                events.ScheduleEvent(EVENT_HEAL, 20000); // TODO: Fix the timers
             }
 
             void UpdateAI(const uint32 diff)
@@ -453,6 +459,8 @@ class npc_korkron_primalist: public CreatureScript
                     }
                 }
 
+                events.Update(diff);
+
                 while (uint32 eventId = events.ExecuteEvent())
                 {
                     switch (eventId)
@@ -468,7 +476,7 @@ class npc_korkron_primalist: public CreatureScript
                             if (me->isInCombat())
                                 if (!me->getVictim()->IsFriendlyTo(me))
                                     me->CastSpell(me->getVictim(), SPELL_WRATH, false);
-                            events.ScheduleEvent(EVENT_WRATH, 20000);
+                            events.ScheduleEvent(EVENT_WRATH, 10000);
                             break;
                         case EVENT_HEAL:
                             if (me->isInCombat())
@@ -484,13 +492,15 @@ class npc_korkron_primalist: public CreatureScript
 
                                 uint32 spellId = SPELL_HEALING_TOUCH;
                                 uint32 healthPct = finalTarget->GetHealthPct();
-                                if (healthPct > 10 && healthPct < 15)
+                                if (healthPct > 15 && healthPct < 20)
+                                    spellId = (urand (0, 1) ? SPELL_REGROWTH : SPELL_HEALING_TOUCH);
+                                else if (healthPct >= 20 && healthPct < 40)
                                     spellId = SPELL_REGROWTH;
                                 else if (healthPct > 40)
-                                    spellId = SPELL_REJUVENATION;
+                                    spellId = (urand(0, 1) ? SPELL_REJUVENATION : SPELL_REGROWTH);
 
                                 me->CastSpell(finalTarget, spellId, false);
-                                events.ScheduleEvent(EVENT_HEAL, 25000);
+                                events.ScheduleEvent(EVENT_HEAL, 20000);
                             }
                             break;
                     }
@@ -517,7 +527,7 @@ class spell_overheat : public SpellScriptLoader
         {
             PrepareAuraScript(spell_overheat_AuraScript);
 
-            void OnApply(AuraEffect const* aurEff, AuraEffectHandleModes mode)
+            void OnApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
             {
                 Unit* target = GetTarget();
                 Unit* passenger = target->GetVehicle()->GetPassenger(1);
@@ -527,9 +537,17 @@ class spell_overheat : public SpellScriptLoader
                     passenger->ToPlayer()->AddSpellCooldown(SPELL_INCINERATING_BLAST, 0, time(NULL) + 3000);
                 }
             }
+
+            void Register()
+            {
+                OnEffectApply += AuraEffectApplyFn(spell_overheat_AuraScript::OnApply, EFFECT_0, SPELL_EFFECT_APPLY_AURA, AURA_EFFECT_HANDLE_REAL);
+            }
         };
 
-
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_overheat_AuraScript();
+        }
 };
 
 void AddSC_boss_gunship_battle()
