@@ -138,9 +138,9 @@ enum Texts
     TALK_INTRO_HORDE_4                  = 4,
 };
 
+/* ----------------------------------- Gunship NPCs & Transports ----------------------------------- */
+
 /* Muradin event starter */
-/* Todo: remove the spawning system from him and apply it the the squads. pInstance->CreateTransport() */
-/* Also add a method to position the gunship depending on the encounter state : See m_Waypoints */
 class npc_muradin_gunship : public CreatureScript
 {
     public:
@@ -309,16 +309,33 @@ class npc_korkron_axethrower : public CreatureScript
 
         struct npc_korkron_axethrowerAI : public ScriptedAI
         {
-            npc_korkron_axethrowerAI(Creature *creature) : ScriptedAI(creature) { }
+            npc_korkron_axethrowerAI(Creature *creature) : ScriptedAI(creature)
+            {
+                bool isAllianceInInstance = (creature->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == ALLIANCE);
+                bool desperated = false;
+            }
 
             void Reset()
             {
                 ScriptedAI::Reset();
-                if (me->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == ALLIANCE)
+                desperated = false;
+                me->RemoveAurasDueToSpell(SPELL_EXPERIENCED);
+                me->RemoveAurasDueToSpell(SPELL_ELITE);
+                me->RemoveAurasDueToSpell(SPELL_VETERAN);
+
+                if (!isAllianceInInstance)
+                    return;
+                events.ScheduleEvent(EVENT_EXPERIENCED, urand(19000, 21000)); // ~20 sec
+                events.ScheduleEvent(EVENT_VETERAN, urand(39000, 41000));     // ~40 sec
+                events.ScheduleEvent(EVENT_ELITE, urand(59000, 61000));       // ~60 sec
+            }
+
+            void DamageTaken(Unit* /*attacker*/, uint32 /*damage*/)
+            {
+                if (isAllianceInInstance && me->GetHealthPct() < 20.0f && !desperated)
                 {
-                    events.ScheduleEvent(EVENT_EXPERIENCED, urand(19000, 21000)); // ~20 sec
-                    events.ScheduleEvent(EVENT_VETERAN, urand(39000, 41000));     // ~40 sec
-                    events.ScheduleEvent(EVENT_ELITE, urand(59000, 61000));       // ~60 sec
+                    desperated = true;
+                    DoCast(me, SPELL_DESPERATE_RESOLVE);
                 }
             }
 
@@ -353,6 +370,8 @@ class npc_korkron_axethrower : public CreatureScript
 
             private:
                 EventMap events;
+                bool isAllianceInInstance;
+                bool desperated;
         };
 
         CreatureAI* GetAI(Creature* pCreature) const
@@ -369,16 +388,33 @@ class npc_skybreaker_rifleman : public CreatureScript
 
         struct npc_skybreaker_riflemanAI : public ScriptedAI
         {
-            npc_skybreaker_riflemanAI(Creature *creature) : ScriptedAI(creature) { }
+            npc_skybreaker_riflemanAI(Creature *creature) : ScriptedAI(creature)
+            {
+                bool isHordeInInstance = (creature->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == HORDE);
+                bool desperated = false;
+            }
 
             void Reset()
             {
                 ScriptedAI::Reset();
-                if (me->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == HORDE)
+                desperated = false;
+                me->RemoveAurasDueToSpell(SPELL_EXPERIENCED);
+                me->RemoveAurasDueToSpell(SPELL_ELITE);
+                me->RemoveAurasDueToSpell(SPELL_VETERAN);
+
+                if (!isHordeInInstance)
+                    return;
+                events.ScheduleEvent(EVENT_EXPERIENCED, urand(19000, 21000)); // ~20 sec
+                events.ScheduleEvent(EVENT_VETERAN, urand(39000, 41000));     // ~40 sec
+                events.ScheduleEvent(EVENT_ELITE, urand(59000, 61000));       // ~60 sec
+            }
+
+            void DamageTaken(Unit* /*attacker*/, uint32 /*damage*/)
+            {
+                if (isHordeInInstance && me->GetHealthPct() < 20.0f && !desperated)
                 {
-                    events.ScheduleEvent(EVENT_EXPERIENCED, urand(19000, 21000)); // ~20 sec
-                    events.ScheduleEvent(EVENT_VETERAN, urand(39000, 41000));     // ~40 sec
-                    events.ScheduleEvent(EVENT_ELITE, urand(59000, 61000));       // ~60 sec
+                    desperated = true;
+                    DoCast(me, SPELL_DESPERATE_RESOLVE);
                 }
             }
 
@@ -413,6 +449,8 @@ class npc_skybreaker_rifleman : public CreatureScript
 
             private:
                 EventMap events;
+                bool isHordeInInstance;
+                bool desperated;
         };
 
         CreatureAI* GetAI(Creature* pCreature) const
@@ -423,6 +461,8 @@ class npc_skybreaker_rifleman : public CreatureScript
 
 /* Skybreaker Sorcerer & Kor'kron Battle-Mage */
 /* Todo */
+
+/* ----------------------------------- Rampart of Skulls NPCs ----------------------------------- */
 
 /* Kor'kron Primalist */
 class npc_korkron_primalist: public CreatureScript
@@ -517,6 +557,8 @@ class npc_korkron_primalist: public CreatureScript
             return new npc_korkron_primalistAI(pCreature);
         }
 };
+
+/* ----------------------------------- Spells ----------------------------------- */
 
 class spell_overheat : public SpellScriptLoader
 {
