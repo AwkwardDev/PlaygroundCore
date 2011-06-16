@@ -3,7 +3,8 @@
  * TODO List :
  * - [COMPLETE] Fix Below Zero to freeze only cannons.
      -> http://www.trinitycore.org/f/topic/3269-complete-gunship-battle-sai/page__gopid__19479#entry19479
- * - Get approximative positions for every NPC, coupling Horde with Alliance to gain performance
+ * - Mages have a U movement
+ *   http://www.youtube.com/watch?v=3bIcqOdteac 1:17 
  * - Encounter frames : the enemy one is the first one. They both are supposed to be friendly to 
         the player for him not to dot them, nor AoE, and should not be selectable.
         Hencemore, they appear when the enemy ship is boarding yours.
@@ -14,6 +15,8 @@
  * - When players win, the enemy zeppelin escapes VERY quickly
  * Notes:
  * - Rocketeers seem to be able to cast on their own ship. For their spell, take a look at SPELL_ROCKET_ARTILLERY_TARGET_ALLIANCE and SPELL_ROCKET_ARTILLERY_TARGET_HORDE (Script effect, SpellEffect.cpp, EffectScriptEffect(EffIndex index))
+ * Bla:
+  http://www.youtube.com/watch?v=ekjRGPawpas&NR=1
  */
 
 #include "ScriptPCH.h"
@@ -24,14 +27,35 @@
 struct NPCsPositions
 {
     uint32 npcId; // `creature_template`.`entry`
-    // The positions should be set offseted from the transport's position.
-    Position positionPlayer; // Position if the creature is friendly with the players
-    Position positionEnemy; // Position if the creature is on the enemy ship
+    // The position should be set offseted from the transport's position.
+    Position positionPlayer; // Position 
+    bool isFriendlyToTeamInInstance; // To chose which position has to be used
+    uint32 spawnMode; // 1 : 10 men; 2 : 25men; 3 : every mode
 };
 
 const NPCsPositions npcPositions[]=
 {
-    {36948, {-472.596f, 2466.8701f, 190.7371f, 6.204f}, {0.0f, 0.0f, 0.0f, 0.0f}}, // Muradin, player ship (Alliance team)
+    // Note: -472.596f, 2466.8701f, 190.7371f, 6.204f MURADIN_BRONZEBEARD PlrShip .begin()->second
+
+    // Leaders
+    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, false, 3}, // If team in instance is Horde
+    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, true,  3}, // If team in instance is Alliance
+    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, false, 3}, // If team in instance is Alliance
+    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, true,  3}, // If team in instance is Horde
+    // UnitFrames NPCs
+    {NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, false, 3},
+    {NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, false, 3},
+    // The following NPCs are spawned only on the enemy ship, and twice.
+    // Kor'kron Rocketeer (3 of them in 25)
+    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, false, 3},
+    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, false, 3},
+    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, true,  3},
+    // Skybreaker Mortar Soldier (3 of them in 25)
+    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, false, 3},
+    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, false, 3},
+    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, true,  3},
+    // Kor'kron Axethrower (8 on 25, 4 on 10)
+    // Skybreaker Riflemen (8 on 25, 4 on 10)
 };
 
 enum Spells
@@ -48,7 +72,8 @@ enum Spells
     // Achievement spell required target
     SPELL_ACHIEVEMENT                 = 72959,
 
-    // Rampart of Skulls Shared NPCs spells
+    // Rampart of Skulls NPCs Spells
+    // Kor'kron Primalist
     SPELL_WRATH                       = 69968,
     SPELL_HEALING_TOUCH               = 69899,
     SPELL_REGROWTH                    = 69882,
@@ -105,38 +130,103 @@ enum Events
 
 enum Texts
 {
-    // Kor'kron Primalist says: Thank the spirits for you, brothers and sisters. 
-    // The Skybreaker has already left. Quickly now, to Orgrim's Hammer! If you
-    // leave soon, you may be able to catch them.
-    TALK_FIRST_SQUAD_RESCUED_HORDE_0 = 0,
-    // Kor'kron Invoker says: This should be helpin'ya!
-    TALK_FIRST_SQUAD_RESCUED_HORDE_1 = 0,
+    // Kor'kron Primalist
+    SAY_FIRST_SQUAD_RESCUED_HORDE_0  = 0,
+    // Kor'kron Invoker
+    SAY_FIRST_SQUAD_RESCUED_HORDE_1  = 0,
+    // Kor'kron Defender
+    SAY_SECOND_SQUAD_RESCUED_HORDE_0 = 0,
+    SAY_SECOND_SQUAD_RESCUED_HORDE_1 = 1,
 
-    // Kor'kron Defender says: Aka'Magosh, brave warriors. The alliance is in great number here
-    TALK_SECOND_SQUAD_RESCUED_HORDE_0 = 0,
-    // Kor'kron Defender says: Captain Saurfang will be pleased to see you aboard Orgrim's Hammer. 
-    // Make haste, we will secure the area until you are ready for take-off.
-    TALK_SECOND_SQUAD_RESCUED_HORDE_1 = 1,
+    // Skybreaker Vindicator
+    SAY_FIRST_SQUAD_RESCUED_ALLIANCE_0  = 0,
+    // Skybreaker Sorcerer
+    SAY_FIRST_SQUAD_RESCUED_ALLIANCE_1  = 0,
+    // Skybreaker Protector
+    SAY_SECOND_SQUAD_RESCUED_ALLIANCE_0 = 0,
+    SAY_SECOND_SQUAD_RESCUED_ALLIANCE_1 = 1,
+    SAY_SECOND_SQUAD_RESCUED_ALLIANCE_2 = 2,
+
+    SAY_SUMMON_BATTLE_STANDARD          = 1, // Invoker & Sorcerer
 
     // -- These two are left to do
     // A screeching cry pierces the air above! (Widescreen Yellow Emote)
     // A Spire Frostwyrm lands just before Orgrim's Hammer. (Chat message)
     // --
 
-    // High Overlord Saurfang yells: Rise up, sons and daughters of the Horde! 
-    // Today we battle a hated enemy of the Horde! LOK'TAR OGAR! Kor'kron, take us out!
-    TALK_INTRO_HORDE_1                  = 0,
-    // High Overlord Saurfang yells: What is that?! Something approaching in the distance!
-    TALK_INTRO_HORDE_2                  = 1,
-    // High Overlord Saurfang yells: ALLIANCE GUNSHIP! ALL HANDS ON DECK!
-    TALK_INTRO_HORDE_3                  = 2,
-    // Muradin Bronzebeard yells: Move yer jalopy or we'll blow it out of
-    // the sky, orc! The Horde's got no business here!
-    TALK_INTRO_HORDE_3                  = 3,
+    // Muradin Bronzebeard
+    SAY_INTRO_ALLIANCE_0             = 0,
+    SAY_INTRO_ALLIANCE_1             = 1,
+    SAY_INTRO_ALLIANCE_2             = 2,
+    SAY_INTRO_ALLIANCE_3             = 3,
+    SAY_INTRO_ALLIANCE_4             = 4,
+    SAY_INTRO_ALLIANCE_5             = 5,
+    SAY_INTRO_ALLIANCE_7             = 6,
+    SAY_INTRO_HORDE_3                = 7,
+    SAY_BOARDING_SKYBREAKER_1        = 8,
+    SAY_BOARDING_ORGRIMS_HAMMER_0    = 9,
+    SAY_NEW_RIFLEMEN_SPAWNED         = 10,
+    SAY_NEW_MORTAR_TEAM_SPAWNED      = 11,
+    SAY_NEW_MAGE_SPAWNED             = 12,
+    SAY_ALLIANCE_VICTORY             = 13,
+    SAY_ALLIANCE_DEFEAT              = 14, // How will we handle that case ? Ie. the player loses 
 
-    // High Overlord Saurfang yells: You will know our business soon! KOR'KRON, ANNIHILATE THEM!
-    TALK_INTRO_HORDE_4                  = 4,
+    // High Overlord Saurfang
+    SAY_INTRO_HORDE_0                = 0,
+    SAY_INTRO_HORDE_1                = 1,
+    SAY_INTRO_HORDE_2                = 2,
+    SAY_INTRO_HORDE_4                = 3,
+    SAY_BOARDING_SKYBREAKER_0        = 4,
+    SAY_BOARDING_ORGRIMS_HAMMER_1    = 5,
+    SAY_NEW_AXETHROWER_SPAWNED       = 6,
+    SAY_NEW_ROCKETEERS_SPAWNED       = 7,
+    SAY_NEW_BATTLE_MAGE_SPAWNED      = 8,
+    SAY_HORDE_VICTORY                = 9,
+    SAY_HORDE_DEFEAT                 = 10, // How will we handle that case ? Ie. the player loses  
 };
+
+/* ----------------------------------- Helper --------------------------------- */
+Transport* CreateTransport(uint32 goEntry, uint32 period)
+{
+    const GameObjectTemplate* goInfo = sObjectMgr->GetGameObjectTemplate(goEntry);
+    if (!goInfo)
+    {
+        sLog->outErrorDb("Transport ID: %u, Name: %s, will not be loaded, gameobject_template is missing", goEntry, goInfo->name.c_str());
+        return NULL;
+    }
+    Transport *t = new Transport(period, goInfo->ScriptId);
+
+    std::set<uint32> mapsUsed;
+    if (!t->GenerateWaypoints(goInfo->moTransport.taxiPathId, mapsUsed))
+    {
+        sLog->outErrorDb("Transport (path id %u) path size = 0. Transport ignored, check DBC files or the gameobject's data0 field.", goInfo->moTransport.taxiPathId);
+        delete t;
+        return NULL;
+    }
+
+    return t;
+}
+
+Transport* SetTransportWaypointId(Transport* t, uint32 wpId, uint32 goEntry)
+{
+    uint32 transportLowGuid = sObjectMgr->GenerateLowGuid(HIGHGUID_MO_TRANSPORT);
+    uint32 wantedWp = wpId;
+    uint32 wpCount = t->m_WayPoints.size();
+    if (wpId > wpCount)
+    {
+        sLog->outError("ICCGunship::SetTransportWaypointId: Waypoint ID %u specified is greater than m_Waypoints.size(), assuming we want the last waypoint.", wpId);
+        wantedWp = wpCount;
+    }
+
+    // Creates the Gameobject
+    if (!t->Create(transportLowGuid, goEntry, t->m_WayPoints[wantedWp].mapid, t->m_WayPoints[wantedWp].x, t->m_WayPoints[wantedWp].y, t->m_WayPoints[wantedWp].z, 0.0f, 0, 0))
+    {
+        delete t;
+        return NULL;
+    }
+
+    return t;
+}
 
 /* ----------------------------------- Gunship NPCs & Transports ----------------------------------- */
 
@@ -307,12 +397,12 @@ class npc_korkron_axethrower : public CreatureScript
     public:
         npc_korkron_axethrower() : CreatureScript("npc_korkron_axethrower") { }
 
-        struct npc_korkron_axethrowerAI : public ScriptedAI
+        struct npc_korkron_axethrowerAI : public Scripted_NoMovementAI
         {
-            npc_korkron_axethrowerAI(Creature *creature) : ScriptedAI(creature)
+            npc_korkron_axethrowerAI(Creature *creature) : Scripted_NoMovementAI(creature)
             {
                 bool isAllianceInInstance = (creature->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == ALLIANCE);
-                bool desperated = false;
+                Reset();
             }
 
             void Reset()
@@ -386,12 +476,12 @@ class npc_skybreaker_rifleman : public CreatureScript
     public:
         npc_skybreaker_rifleman() : CreatureScript("npc_skybreaker_rifleman") { }
 
-        struct npc_skybreaker_riflemanAI : public ScriptedAI
+        struct npc_skybreaker_riflemanAI : public Scripted_NoMovementAI
         {
-            npc_skybreaker_riflemanAI(Creature *creature) : ScriptedAI(creature)
+            npc_skybreaker_riflemanAI(Creature *creature) : Scripted_NoMovementAI(creature)
             {
                 bool isHordeInInstance = (creature->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == HORDE);
-                bool desperated = false;
+                Reset();
             }
 
             void Reset()
@@ -506,11 +596,11 @@ class npc_korkron_primalist: public CreatureScript
                     switch (eventId)
                     {
                         case EVENT_FIRST_SQUAD_ASSISTED_1:
-                            Talk(TALK_FIRST_SQUAD_RESCUED_HORDE_0);
+                            Talk(SAY_FIRST_SQUAD_RESCUED_HORDE_0);
                             break;
                         case EVENT_FIRST_SQUAD_ASSISTED_2:
                             if (Creature* tempUnit = me->FindNearestCreature(NPC_KORKRON_INVOKER, 50.0f, true))
-                                tempUnit->AI()->Talk(TALK_FIRST_SQUAD_RESCUED_HORDE_1);
+                                tempUnit->AI()->Talk(SAY_FIRST_SQUAD_RESCUED_HORDE_1);
                             break;
                         case EVENT_WRATH:
                             if (me->isInCombat())
@@ -560,14 +650,14 @@ class npc_korkron_primalist: public CreatureScript
 
 /* ----------------------------------- Spells ----------------------------------- */
 
-class spell_overheat : public SpellScriptLoader
+class spell_icc_overheat : public SpellScriptLoader
 {
     public:
-        spell_overheat() : SpellScriptLoader("spell_overheat") { }
+        spell_icc_overheat() : SpellScriptLoader("spell_icc_overheat") { }
 
-        class spell_overheat_AuraScript : public AuraScript
+        class spell_icc_overheat_AuraScript : public AuraScript
         {
-            PrepareAuraScript(spell_overheat_AuraScript);
+            PrepareAuraScript(spell_icc_overheat_AuraScript);
 
             void OnApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
             {
@@ -582,13 +672,13 @@ class spell_overheat : public SpellScriptLoader
 
             void Register()
             {
-                OnEffectApply += AuraEffectApplyFn(spell_overheat_AuraScript::OnApply, EFFECT_0, SPELL_EFFECT_APPLY_AURA, AURA_EFFECT_HANDLE_REAL);
+                OnEffectApply += AuraEffectApplyFn(spell_icc_overheat_AuraScript::OnApply, EFFECT_0, SPELL_EFFECT_APPLY_AURA, AURA_EFFECT_HANDLE_REAL);
             }
         };
 
         AuraScript* GetAuraScript() const
         {
-            return new spell_overheat_AuraScript();
+            return new spell_icc_overheat_AuraScript();
         }
 };
 
@@ -600,5 +690,5 @@ void AddSC_boss_gunship_battle()
     new npc_gunship_cannon();
     new npc_korkron_axethrower();
     new npc_skybreaker_rifleman();
-    new spell_overheat();
+    new spell_icc_overheat();
 }

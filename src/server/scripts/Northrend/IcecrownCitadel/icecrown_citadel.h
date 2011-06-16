@@ -177,6 +177,16 @@ enum CreaturesIds
     NPC_KORKRON_INVOKER                         = 37033,
     NPC_SKYBREAKER_SORCERER                     = 37026,
 
+    // Gunship Battle
+    NPC_GB_SKYBREAKER                           = 37540,    // GB means Gunship Battle
+    NPC_GB_ORGRIMS_HAMMER                       = 37215,
+    NPC_GB_HIGH_OVERLORD_SAURFANG               = 36939,
+    NPC_GB_MURADIN_BRONZEBEARD                  = 36948,
+    NPC_GB_KORKRON_REAVER                       = 37920,
+    NPC_GB_SKYBREAKER_MARINE                    = 36950,
+    NPC_GB_KORKRON_ROCKETEER                    = 36982,
+    NPC_GB_SKYBREAKER_MORTAR_SOLDIER            = 36978,
+
     // Deathbringer Saurfang
     NPC_DEATHBRINGER_SAURFANG                   = 37813,
     NPC_BLOOD_BEAST                             = 38508,
