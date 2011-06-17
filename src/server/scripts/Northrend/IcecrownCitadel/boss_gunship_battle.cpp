@@ -1,4 +1,4 @@
-﻿/* Gunship Battle
+/* Gunship Battle
  * Dev start : 29 / 05 / 2011
  * TODO List :
  * - [COMPLETE] Fix Below Zero to freeze only cannons.
@@ -28,9 +28,9 @@ struct NPCsPositions
 {
     uint32 npcId; // `creature_template`.`entry`
     // The position should be set offseted from the transport's position.
-    Position positionPlayer; // Position 
-    bool isFriendlyToTeamInInstance; // To chose which position has to be used
+    Position pos; // Position
     uint32 spawnMode; // 1 : 10 men; 2 : 25men; 3 : every mode
+    bool teamInInstanceDependance; // true = spawned if Alliance; false = if Horde
 };
 
 const NPCsPositions npcPositions[]=
@@ -38,22 +38,24 @@ const NPCsPositions npcPositions[]=
     // Note: -472.596f, 2466.8701f, 190.7371f, 6.204f MURADIN_BRONZEBEARD PlrShip .begin()->second
 
     // Leaders
-    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, false, 3}, // If team in instance is Horde
-    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, true,  3}, // If team in instance is Alliance
-    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, false, 3}, // If team in instance is Alliance
-    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, true,  3}, // If team in instance is Horde
+    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
+    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
+    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
+    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
     // UnitFrames NPCs
-    {NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, false, 3},
-    {NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, false, 3},
+    {NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
+    {NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
+    {NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
+    {NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
     // The following NPCs are spawned only on the enemy ship, and twice.
     // Kor'kron Rocketeer (3 of them in 25)
-    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, false, 3},
-    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, false, 3},
-    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, true,  3},
+    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
+    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
+    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, 2, true},  // Alliance
     // Skybreaker Mortar Soldier (3 of them in 25)
-    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, false, 3},
-    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, false, 3},
-    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, true,  3},
+    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
+    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
+    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, 2, false}, // Horde
     // Kor'kron Axethrower (8 on 25, 4 on 10)
     // Skybreaker Riflemen (8 on 25, 4 on 10)
 };
@@ -228,9 +230,40 @@ Transport* SetTransportWaypointId(Transport* t, uint32 wpId, uint32 goEntry)
     return t;
 }
 
+bool AddPassengers(Transport* t, const NPCsPositions* npcList)
+{
+    // This should never happen
+    if (!t->GetMap()->Instanceable())
+        return false;
+    bool is25MenMap = (t->GetMap()->ToInstanceMap()->GetMaxPlayers() == 25);
+    while (npcList->npcId)
+    {
+        bool canSpawn = false;
+        if ((npcList->spawnMode == 2 && is25MenMap) || // Mode 2 & 25Men to spawn.
+            (npcList->spawnMode == 1 && !is25MenMap) || // Mode 1 & !25Men to spawn.
+            npcList->spawnMode == 3) // Mode 3, always spawned
+            bool canSpawn = true;
+
+        if (canSpawn)
+        {
+            if (npcList->teamInInstanceDependance) // bool true means Alliance must in instance
+            {
+                if (t->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == ALLIANCE)
+                    t->AddNPCPassenger(t->GetGUID(), npcList->npcId, npcList->pos.m_positionX, npcList->pos.m_positionY, npcList->pos.m_positionZ, npcList->pos.m_orientation, 100);
+            }
+            else //Then must be Horde in instance
+            {
+                if (t->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == HORDE)
+                    t->AddNPCPassenger(t->GetGUID(), npcList->npcId, npcList->pos.m_positionX, npcList->pos.m_positionY, npcList->pos.m_positionZ, npcList->pos.m_orientation, 100);
+            }
+        }
+        npcList++;
+    }
+}
+
 /* ----------------------------------- Gunship NPCs & Transports ----------------------------------- */
 
-/* Muradin event starter */
+/* Muradin Bronzebeard */
 class npc_muradin_gunship : public CreatureScript
 {
     public:
