@@ -28,9 +28,9 @@ struct NPCsPositions
 {
     uint32 npcId; // `creature_template`.`entry`
     // The position should be set offseted from the transport's position.
-    Position pos; // Position
+    Position posAlliance; // Position if the team in the instance is the Alliance
+    Position posHorde; // Position if the team in the instance is the Horde
     uint32 spawnMode; // 1 : 10 men; 2 : 25men; 3 : every mode
-    bool teamInInstanceDependance; // true = spawned if Alliance; false = if Horde
 };
 
 const NPCsPositions npcPositions[]=
@@ -38,24 +38,20 @@ const NPCsPositions npcPositions[]=
     // Note: -472.596f, 2466.8701f, 190.7371f, 6.204f MURADIN_BRONZEBEARD PlrShip .begin()->second
 
     // Leaders
-    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
-    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
-    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
-    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
+    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
+    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
     // UnitFrames NPCs
-    {NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
-    {NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
-    {NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
-    {NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
+    {NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
+    {NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
     // The following NPCs are spawned only on the enemy ship, and twice.
-    // Kor'kron Rocketeer (3 of them in 25)
-    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
-    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
-    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, 2, true},  // Alliance
-    // Skybreaker Mortar Soldier (3 of them in 25)
-    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
-    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
-    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, 2, false}, // Horde
+    // Kor'kron Rocketeer (3 of them in 25) only spawned if the team in instance is Alliance
+    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
+    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
+    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 2},
+    // Skybreaker Mortar Soldier (3 of them in 25) only spawned if the team in instance is Horde
+    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
+    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
+    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 2},
     // Kor'kron Axethrower (8 on 25, 4 on 10)
     // Skybreaker Riflemen (8 on 25, 4 on 10)
 };
@@ -187,7 +183,7 @@ enum Texts
     SAY_HORDE_DEFEAT                 = 10, // How will we handle that case ? Ie. the player loses  
 };
 
-/* ----------------------------------- Helper --------------------------------- */
+/* ----------------------------------- Behavior : --------------------------------- */
 Transport* CreateTransport(uint32 goEntry, uint32 period)
 {
     const GameObjectTemplate* goInfo = sObjectMgr->GetGameObjectTemplate(goEntry);
@@ -230,11 +226,8 @@ Transport* SetTransportWaypointId(Transport* t, uint32 wpId, uint32 goEntry)
     return t;
 }
 
-bool AddPassengers(Transport* t, const NPCsPositions* npcList)
+bool AddPassengers(Transport* t, const NPCsPositions* npcList, uint32 teamInInstance, uint32 transportFaction)
 {
-    // This should never happen
-    if (!t->GetMap()->Instanceable())
-        return false;
     bool is25MenMap = (t->GetMap()->ToInstanceMap()->GetMaxPlayers() == 25);
     while (npcList->npcId)
     {
@@ -246,16 +239,7 @@ bool AddPassengers(Transport* t, const NPCsPositions* npcList)
 
         if (canSpawn)
         {
-            if (npcList->teamInInstanceDependance) // bool true means Alliance must in instance
-            {
-                if (t->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == ALLIANCE)
-                    t->AddNPCPassenger(t->GetGUID(), npcList->npcId, npcList->pos.m_positionX, npcList->pos.m_positionY, npcList->pos.m_positionZ, npcList->pos.m_orientation, 100);
-            }
-            else //Then must be Horde in instance
-            {
-                if (t->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == HORDE)
-                    t->AddNPCPassenger(t->GetGUID(), npcList->npcId, npcList->pos.m_positionX, npcList->pos.m_positionY, npcList->pos.m_positionZ, npcList->pos.m_orientation, 100);
-            }
+            // Todo : give my brain some fresh air
         }
         npcList++;
     }
@@ -366,6 +350,7 @@ class npc_zafod_boombox : public CreatureScript
 
         bool OnGossipHello(Player* pPlayer, Creature* pCreature)
         {
+            // Maybe this isn't blizzlike
             if (pPlayer->GetItemCount(49278, false) == 0)
                 pPlayer->ADD_GOSSIP_ITEM(0, "Yeah, I'm sure safety is your top priority. Give me a rocket pack.", 631, 1);
             pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
@@ -377,9 +362,9 @@ class npc_zafod_boombox : public CreatureScript
             player->CLOSE_GOSSIP_MENU();
             if (action == 1)
             {
-                // Seurity, this shouldn't happen. Maybe useless, I can't doublecheck atm if the item is unique.
+                // Seurity, this shouldn't happen. Maybe useless.
                 uint32 itemId = 49278;
-                uint32 curItemCount = player->GetItemCount(itemId, false);
+                uint32 curItemCount = player->GetItemCount(49278, false);
                 if (curItemCount >= 1)
                 {
                     pCreature->MonsterWhisper("You already have my rocket pack !", player->GetGUIDLow());
@@ -387,10 +372,10 @@ class npc_zafod_boombox : public CreatureScript
                 }
 
                 ItemPosCountVec dest;
-                uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemId, 1);
+                uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 49278, 1);
                 if (msg == EQUIP_ERR_OK)
                 {
-                    Item* item = player->StoreNewItem(dest, itemId, true);
+                    Item* item = player->StoreNewItem(dest, 49278, true);
                     player->SendNewItem(item, 1, true, false);
                 }
             }
@@ -411,6 +396,7 @@ class npc_gunship_cannon : public CreatureScript
 
             void SpellHit(Unit* caster, SpellEntry const* spellEntry)
             {
+                // TODO : Move this to AuraScript ?
                 if (spellEntry->Id == SPELL_BELOW_ZERO)
                     me->GetVehicleKit()->RemoveAllPassengers();
             }
@@ -419,7 +405,7 @@ class npc_gunship_cannon : public CreatureScript
             {
                 if (Powers powerType = me->getPowerType())
                     if (me->GetPower(powerType) == me->GetMaxPower(powerType))
-                        DoCast(me, SPELL_OVERHEAT);
+                        DoCast(me, SPELL_OVERHEAT); // TODO : fix infinite cooldown on cannon abilities
             }
         };
 };
@@ -446,7 +432,7 @@ class npc_korkron_axethrower : public CreatureScript
                 me->RemoveAurasDueToSpell(SPELL_ELITE);
                 me->RemoveAurasDueToSpell(SPELL_VETERAN);
 
-                if (!isAllianceInInstance)
+                if (!isAllianceInInstance) // Of course, it should never return here.
                     return;
                 events.ScheduleEvent(EVENT_EXPERIENCED, urand(19000, 21000)); // ~20 sec
                 events.ScheduleEvent(EVENT_VETERAN, urand(39000, 41000));     // ~40 sec
@@ -525,7 +511,7 @@ class npc_skybreaker_rifleman : public CreatureScript
                 me->RemoveAurasDueToSpell(SPELL_ELITE);
                 me->RemoveAurasDueToSpell(SPELL_VETERAN);
 
-                if (!isHordeInInstance)
+                if (!isHordeInInstance) // Same as his Alliance copy
                     return;
                 events.ScheduleEvent(EVENT_EXPERIENCED, urand(19000, 21000)); // ~20 sec
                 events.ScheduleEvent(EVENT_VETERAN, urand(39000, 41000));     // ~40 sec
@@ -583,7 +569,7 @@ class npc_skybreaker_rifleman : public CreatureScript
 };
 
 /* Skybreaker Sorcerer & Kor'kron Battle-Mage */
-/* Todo */
+/* Won;t be able to do these two unless I have sniffs or test on local */
 
 /* ----------------------------------- Rampart of Skulls NPCs ----------------------------------- */
 
@@ -683,6 +669,7 @@ class npc_korkron_primalist: public CreatureScript
 
 /* ----------------------------------- Spells ----------------------------------- */
 
+// This is a big hack
 class spell_icc_overheat : public SpellScriptLoader
 {
     public:
