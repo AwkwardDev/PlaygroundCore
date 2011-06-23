@@ -101,9 +101,9 @@ enum DataTypes
     DATA_VALITHRIA_LICH_KING        = 36,
 
     // Gunship Battle
-    DATA_FIRST_SQUAD_ASSISTED       = 37,
-    DATA_SECOND_SQUAD_ASSISTED      = 38,
-    DATA_RAMPART_TRASH_COUNT        = 39
+    DATA_FIRST_SQUAD_STATE          = 37,
+    DATA_SECOND_SQUAD_STATE         = 38,
+    DATA_SPIRE_FROSTWYRM_STATE      = 39
 };
 
 enum CreaturesIds
@@ -176,6 +176,7 @@ enum CreaturesIds
     NPC_SKYBREAKER_VINDICATOR                   = 37003,
     NPC_KORKRON_INVOKER                         = 37033,
     NPC_SKYBREAKER_SORCERER                     = 37026,
+    NPC_SPIRE_FROSTWYRM                         = 37230,
 
     // Gunship Battle
     NPC_GB_SKYBREAKER                           = 37540,    // GB means Gunship Battle
