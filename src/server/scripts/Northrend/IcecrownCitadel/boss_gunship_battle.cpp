@@ -3,8 +3,6 @@
  * TODO List :
  * - [COMPLETE] Fix Below Zero to freeze only cannons.
      -> http://www.trinitycore.org/f/topic/3269-complete-gunship-battle-sai/page__gopid__19479#entry19479
- * - Mages have a U movement
- *   http://www.youtube.com/watch?v=3bIcqOdteac 1:17 
  * - Encounter frames : the enemy one is the first one. They both are supposed to be friendly to 
         the player for him not to dot them, nor AoE, and should not be selectable.
         Hencemore, they appear when the enemy ship is boarding yours.
@@ -15,8 +13,10 @@
  * - When players win, the enemy zeppelin escapes VERY quickly
  * Notes:
  * - Rocketeers seem to be able to cast on their own ship. For their spell, take a look at SPELL_ROCKET_ARTILLERY_TARGET_ALLIANCE and SPELL_ROCKET_ARTILLERY_TARGET_HORDE (Script effect, SpellEffect.cpp, EffectScriptEffect(EffIndex index))
- * Bla:
-  http://www.youtube.com/watch?v=ekjRGPawpas&NR=1
+ * Reference videos:
+   http://www.youtube.com/watch?v=ekjRGPawpas // Wyrm
+   http://www.youtube.com/watch?v=Lr_nnAYZCyE // Wyrm (movement really far away)
+   http://www.youtube.com/watch?v=3bIcqOdteac // Mages
  */
 
 #include "ScriptPCH.h"
@@ -28,42 +28,48 @@ struct NPCsPositions
 {
     uint32 npcId; // `creature_template`.`entry`
     // The position should be set offseted from the transport's position.
-    Position pos; // Position
-    uint32 spawnMode; // 1 : 10 men; 2 : 25men; 3 : every mode
-    bool teamInInstanceDependance; // true = spawned if Alliance; false = if Horde
+    Position position; // Position if the team in the instance is the Alliance
+    uint32 faction;
 };
 
-const NPCsPositions npcPositions[]=
-{
-    // Note: -472.596f, 2466.8701f, 190.7371f, 6.204f MURADIN_BRONZEBEARD PlrShip .begin()->second
+// Note: -472.596f, 2466.8701f, 190.7371f, 6.204f MURADIN_BRONZEBEARD
 
-    // Leaders
-    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
-    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
-    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
-    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
-    // UnitFrames NPCs
-    {NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
-    {NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
-    {NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
-    {NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
-    // The following NPCs are spawned only on the enemy ship, and twice.
-    // Kor'kron Rocketeer (3 of them in 25)
-    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
-    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, 3, true},  // Alliance
-    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, 2, true},  // Alliance
-    // Skybreaker Mortar Soldier (3 of them in 25)
-    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
-    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, 3, false}, // Horde
-    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, 2, false}, // Horde
-    // Kor'kron Axethrower (8 on 25, 4 on 10)
-    // Skybreaker Riflemen (8 on 25, 4 on 10)
+// These NPCs have their positions on the enemy Ship, IF their faction is different from the team in instance
+const NPCsPositions enemyShipNPCList[]=
+{
+    // Alliance NPCs
+    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE},
+    {NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE},
+    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE}, // 4x 25Men, 2x 10Men
+    {NPC_GB_SKYBREAKER_RIFLEMAN,           {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE}, // 8/6x 25Men, 4x 10Men
+
+    // Horde NPCs
+    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, HORDE},
+    {NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, HORDE},
+    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, HORDE}, // 4x 25Men, 2x 10Men
+    {NPC_GB_KORKRON_AXETHROWER,            {0.0f, 0.0f, 0.0f, 0.0f}, HORDE}, // 8/6x 25Men, 4x 10Men
+};
+
+// These NPCs have their positions on the friendly Ship, IF their faction is different from the team in instance
+const NPCsPositions friendlyShipNPCList[]=
+{
+    // Alliance NPCs
+    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE},
+    {NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE},
+    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE}, // 4x 25Men, 2x 10Men
+    {NPC_GB_SKYBREAKER_RIFLEMAN,           {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE}, // 8/6x 25Men, 4x 10Men
+
+    // Horde NPCs
+    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, HORDE},
+    {NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, HORDE},
+    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, HORDE}, // 4x 25Men, 2x 10Men
+    {NPC_GB_KORKRON_AXETHROWER,            {0.0f, 0.0f, 0.0f, 0.0f}, HORDE}, // 8/6x 25Men, 4x 10Men
 };
 
 enum Spells
 {
     // Cannon
-    SPELL_OVERHEAT                    = 69487, // Triggers spell #69488 every 0.25s.
+    SPELL_OVERHEAT                    = 69487, // Triggers spell #69488 every 0.25s. It should consume 10 Energy but does not.
     SPELL_CANNON_BLAST                = 69399,
     SPELL_INCINERATING_BLAST          = 69401,
 
@@ -110,7 +116,7 @@ enum Events
     EVENT_INTRO_ALLIANCE_4, // Muradin Bronzebeard yells: EVASIVE ACTION! MAN THE GUNS!
     EVENT_INTRO_ALLIANCE_5, // Muradin Bronzebeard yells: Cowardly dogs! Ye blindsided us!
     EVENT_INTRO_ALLIANCE_6, // High Overlord Saurfang yells: This is not your battle, dwarf. Back down or we will be forced to destroy your ship.
-    EVENT_INTRO_ALLIANCE_7, // Muradin Bronzebeard yells: Not me battle? I dunnae who ye﻿ think ye are, mister, but I got a score to settle with Arthas and yer not gettin' in me way! FIRE ALL GUNS! FIRE! FIRE!
+    EVENT_INTRO_ALLIANCE_7, // Muradin Bronzebeard yells: Not me battle? I dunnae who ye think ye are, mister, but I got a score to settle with Arthas and yer not gettin' in me way! FIRE ALL GUNS! FIRE! FIRE!
 
     // Rampart of Skulls NPCs Events
     EVENT_WRATH,
@@ -134,22 +140,27 @@ enum Texts
 {
     // Kor'kron Primalist
     SAY_FIRST_SQUAD_RESCUED_HORDE_0  = 0,
+
     // Kor'kron Invoker
     SAY_FIRST_SQUAD_RESCUED_HORDE_1  = 0,
+
     // Kor'kron Defender
     SAY_SECOND_SQUAD_RESCUED_HORDE_0 = 0,
     SAY_SECOND_SQUAD_RESCUED_HORDE_1 = 1,
 
     // Skybreaker Vindicator
     SAY_FIRST_SQUAD_RESCUED_ALLIANCE_0  = 0,
+
     // Skybreaker Sorcerer
     SAY_FIRST_SQUAD_RESCUED_ALLIANCE_1  = 0,
+
     // Skybreaker Protector
     SAY_SECOND_SQUAD_RESCUED_ALLIANCE_0 = 0,
     SAY_SECOND_SQUAD_RESCUED_ALLIANCE_1 = 1,
     SAY_SECOND_SQUAD_RESCUED_ALLIANCE_2 = 2,
-
-    SAY_SUMMON_BATTLE_STANDARD          = 1, // Invoker & Sorcerer
+    
+    // Kor'kron Invoker & Skybreaker Sorcerer
+    SAY_SUMMON_BATTLE_STANDARD          = 1, 
 
     // -- These two are left to do
     // A screeching cry pierces the air above! (Widescreen Yellow Emote)
@@ -187,8 +198,10 @@ enum Texts
     SAY_HORDE_DEFEAT                 = 10, // How will we handle that case ? Ie. the player loses  
 };
 
-/* ----------------------------------- Helper --------------------------------- */
-Transport* CreateTransport(uint32 goEntry, uint32 period)
+/* ----------------------------------- Behavior : --------------------------------- */
+// Transport* wut = SetTransportWaypointId(LoadTransportFromGoEntry(GoEntry, period), wpId, GoEntry));
+// Todo: remake this, this is ugly.
+Transport* LoadTransportFromGoEntry(uint32 goEntry, uint32 period)
 {
     const GameObjectTemplate* goInfo = sObjectMgr->GetGameObjectTemplate(goEntry);
     if (!goInfo)
@@ -230,38 +243,58 @@ Transport* SetTransportWaypointId(Transport* t, uint32 wpId, uint32 goEntry)
     return t;
 }
 
-bool AddPassengers(Transport* t, const NPCsPositions* npcList)
+void AddPassengers(Transport* t, uint32 teamInInstance, uint32 transportFaction)
 {
-    // This should never happen
-    if (!t->GetMap()->Instanceable())
-        return false;
     bool is25MenMap = (t->GetMap()->ToInstanceMap()->GetMaxPlayers() == 25);
-    while (npcList->npcId)
-    {
-        bool canSpawn = false;
-        if ((npcList->spawnMode == 2 && is25MenMap) || // Mode 2 & 25Men to spawn.
-            (npcList->spawnMode == 1 && !is25MenMap) || // Mode 1 & !25Men to spawn.
-            npcList->spawnMode == 3) // Mode 3, always spawned
-            bool canSpawn = true;
 
-        if (canSpawn)
-        {
-            if (npcList->teamInInstanceDependance) // bool true means Alliance must in instance
-            {
-                if (t->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == ALLIANCE)
-                    t->AddNPCPassenger(t->GetGUID(), npcList->npcId, npcList->pos.m_positionX, npcList->pos.m_positionY, npcList->pos.m_positionZ, npcList->pos.m_orientation, 100);
-            }
-            else //Then must be Horde in instance
-            {
-                if (t->GetInstanceScript()->GetData(DATA_TEAM_IN_INSTANCE) == HORDE)
-                    t->AddNPCPassenger(t->GetGUID(), npcList->npcId, npcList->pos.m_positionX, npcList->pos.m_positionY, npcList->pos.m_positionZ, npcList->pos.m_orientation, 100);
-            }
-        }
-        npcList++;
+    const NPCsPositions* list = (transportFaction == teamInInstance ? friendlyShipNPCList : enemyShipNPCList);
+
+    while (list->npcId)
+    {
+        // Only spawn NPCs that have the same faction as the transport's
+        // In fact the transport's faction will be set raw when calling the function,
+        // like AddPassengers(skybreaker, instance->GetData(DATA_TEAM_IN_INSTANCE), ALLIANCE);
+        if (list->faction == transportFaction)
+            t->AddNPCPassenger(t->GetTransGUID(), list->npcId, list->position.m_positionX, list->position.m_positionY, list->position.m_positionZ, list->position.m_orientation, 100);
+        ++list;
     }
 }
 
-/* ----------------------------------- Gunship NPCs & Transports ----------------------------------- */
+/* ----------------------------------- Gunship Battle Itself ----------------------------------- */
+
+/* Player's transport script */
+class transport_gunship : public TransportScript
+{
+    public:
+        transport_gunship() : TransportScript("transport_gunship") { }
+
+        void OnRelocate(Transport* transport, uint32 waypointId, uint32 mapId, float x, float y, float z)
+        {
+            sLog->outString("ICC::Gunship: Transport %s reached waypoint %u/%u. Position is X:%u, Y:%u, Z:%u.", GetName(), waypointId, transport->m_WayPoints.size(), x, y, z);
+        }
+
+        void OnAddPassenger(Transport* transport, Player* player)
+        {
+            if (InstanceScript* instance = transport->GetInstanceScript())
+            {
+                switch (instance->GetData(DATA_TEAM_IN_INSTANCE))
+                {
+                    case HORDE:
+                        player->AddAura(SPELL_ON_ORGRIMS_HAMMERS_DECK, player);
+                        break;
+                    case ALLIANCE:
+                        player->AddAura(SPELL_ON_SKYBREAKERS_DECK, player);
+                        break;
+                }
+            }
+        }
+
+        void OnRemovePassenger(Transport* transport, Player* player)
+        {
+            player->RemoveAurasDueToSpell(SPELL_ON_ORGRIMS_HAMMERS_DECK);
+            player->RemoveAurasDueToSpell(SPELL_ON_SKYBREAKERS_DECK);
+        }
+};
 
 /* Muradin Bronzebeard */
 class npc_muradin_gunship : public CreatureScript
@@ -269,13 +302,13 @@ class npc_muradin_gunship : public CreatureScript
     public:
         npc_muradin_gunship() : CreatureScript("npc_muradin_gunship") { }
 
-        bool OnGossipHello(Player* pPlayer, Creature* pCreature)
+        bool OnGossipHello(Player* player, Creature* pCreature)
         {
             InstanceScript* pInstance = pCreature->GetInstanceScript();
             if (pInstance && pInstance->GetBossState(DATA_GUNSHIP_EVENT) != DONE)
             {
-                pPlayer->ADD_GOSSIP_ITEM(0, "My companions are all accounted for, Muradin. Let's go!", 631, 1001);
-                pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+                player->ADD_GOSSIP_ITEM(0, "My companions are all accounted for, Muradin. Let's go!", 631, 1001);
+                player->SEND_GOSSIP_MENU(player->GetGossipTextId(pCreature), pCreature->GetGUID());
                 return true;
             }
 
@@ -323,41 +356,6 @@ class npc_muradin_gunship : public CreatureScript
             Transport* playersBoat;
 };
 
-/* Player's transport script */
-class transport_gunship : public TransportScript
-{
-    public:
-        transport_gunship() : TransportScript("transport_gunship") { }
-
-        void OnRelocate(Transport* transport, uint32 waypointId, uint32 mapId, float x, float y, float z)
-        {
-            sLog->outString("ICC::Gunship: Transport %s reached waypoint %u/%u. Position is X:%u, Y:%u, Z:%u.", GetName(), waypointId, transport->m_WayPoints.size(), x, y, z);
-        }
-
-        void OnAddPassenger(Transport* transport, Player* player)
-        {
-            if (InstanceScript* instance = transport->GetInstanceScript())
-            {
-                switch (instance->GetData(DATA_TEAM_IN_INSTANCE))
-                {
-                    case HORDE:
-                        player->AddAura(SPELL_ON_ORGRIMS_HAMMERS_DECK, player);
-                        break;
-                    case ALLIANCE:
-                        player->AddAura(SPELL_ON_SKYBREAKERS_DECK, player);
-                        break;
-                }
-            }
-        }
-
-        void OnRemovePassenger(Transport* transport, Player* player)
-        {
-            // Simply ...
-            player->RemoveAurasDueToSpell(SPELL_ON_ORGRIMS_HAMMERS_DECK);
-            player->RemoveAurasDueToSpell(SPELL_ON_SKYBREAKERS_DECK);
-        }
-};
-
 /* Zafod boombox */
 class npc_zafod_boombox : public CreatureScript
 {
@@ -366,6 +364,7 @@ class npc_zafod_boombox : public CreatureScript
 
         bool OnGossipHello(Player* pPlayer, Creature* pCreature)
         {
+            // Maybe this isn't blizzlike
             if (pPlayer->GetItemCount(49278, false) == 0)
                 pPlayer->ADD_GOSSIP_ITEM(0, "Yeah, I'm sure safety is your top priority. Give me a rocket pack.", 631, 1);
             pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
@@ -377,9 +376,9 @@ class npc_zafod_boombox : public CreatureScript
             player->CLOSE_GOSSIP_MENU();
             if (action == 1)
             {
-                // Seurity, this shouldn't happen. Maybe useless, I can't doublecheck atm if the item is unique.
+                // Seurity, this shouldn't happen. Maybe useless.
                 uint32 itemId = 49278;
-                uint32 curItemCount = player->GetItemCount(itemId, false);
+                uint32 curItemCount = player->GetItemCount(49278, false);
                 if (curItemCount >= 1)
                 {
                     pCreature->MonsterWhisper("You already have my rocket pack !", player->GetGUIDLow());
@@ -387,10 +386,10 @@ class npc_zafod_boombox : public CreatureScript
                 }
 
                 ItemPosCountVec dest;
-                uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemId, 1);
+                uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 49278, 1);
                 if (msg == EQUIP_ERR_OK)
                 {
-                    Item* item = player->StoreNewItem(dest, itemId, true);
+                    Item* item = player->StoreNewItem(dest, 49278, true);
                     player->SendNewItem(item, 1, true, false);
                 }
             }
@@ -411,6 +410,7 @@ class npc_gunship_cannon : public CreatureScript
 
             void SpellHit(Unit* caster, SpellEntry const* spellEntry)
             {
+                // TODO : Move this to AuraScript ?
                 if (spellEntry->Id == SPELL_BELOW_ZERO)
                     me->GetVehicleKit()->RemoveAllPassengers();
             }
@@ -419,7 +419,7 @@ class npc_gunship_cannon : public CreatureScript
             {
                 if (Powers powerType = me->getPowerType())
                     if (me->GetPower(powerType) == me->GetMaxPower(powerType))
-                        DoCast(me, SPELL_OVERHEAT);
+                        DoCast(me, SPELL_OVERHEAT); // TODO : fix infinite cooldown on cannon abilities
             }
         };
 };
@@ -446,7 +446,7 @@ class npc_korkron_axethrower : public CreatureScript
                 me->RemoveAurasDueToSpell(SPELL_ELITE);
                 me->RemoveAurasDueToSpell(SPELL_VETERAN);
 
-                if (!isAllianceInInstance)
+                if (!isAllianceInInstance) // Of course, it should never return here.
                     return;
                 events.ScheduleEvent(EVENT_EXPERIENCED, urand(19000, 21000)); // ~20 sec
                 events.ScheduleEvent(EVENT_VETERAN, urand(39000, 41000));     // ~40 sec
@@ -525,7 +525,7 @@ class npc_skybreaker_rifleman : public CreatureScript
                 me->RemoveAurasDueToSpell(SPELL_ELITE);
                 me->RemoveAurasDueToSpell(SPELL_VETERAN);
 
-                if (!isHordeInInstance)
+                if (!isHordeInInstance) // Same as his Alliance copy
                     return;
                 events.ScheduleEvent(EVENT_EXPERIENCED, urand(19000, 21000)); // ~20 sec
                 events.ScheduleEvent(EVENT_VETERAN, urand(39000, 41000));     // ~40 sec
@@ -583,7 +583,7 @@ class npc_skybreaker_rifleman : public CreatureScript
 };
 
 /* Skybreaker Sorcerer & Kor'kron Battle-Mage */
-/* Todo */
+/* Won't be able to do these two unless I have sniffs or can perform tests on local */
 
 /* ----------------------------------- Rampart of Skulls NPCs ----------------------------------- */
 
@@ -683,6 +683,7 @@ class npc_korkron_primalist: public CreatureScript
 
 /* ----------------------------------- Spells ----------------------------------- */
 
+// This is a big hack, and here because spell cooldown is not implemented on creatures, nor category cooldown.
 class spell_icc_overheat : public SpellScriptLoader
 {
     public:
@@ -694,8 +695,7 @@ class spell_icc_overheat : public SpellScriptLoader
 
             void OnApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
             {
-                Unit* target = GetTarget();
-                Unit* passenger = target->GetVehicle()->GetPassenger(1);
+                Unit* passenger = GetUnitOwner()->GetVehicle()->GetPassenger(1);
                 if (passenger->GetTypeId() == TYPEID_PLAYER)
                 {
                     passenger->ToPlayer()->AddSpellCooldown(SPELL_CANNON_BLAST, 0, time(NULL) + 3000);
@@ -712,6 +712,32 @@ class spell_icc_overheat : public SpellScriptLoader
         AuraScript* GetAuraScript() const
         {
             return new spell_icc_overheat_AuraScript();
+        }
+};
+
+/* ---------------------------------- AreaTrigger Scripts ------------------------------------- */
+class at_icc_land_frostwyrm : public AreaTriggerScript
+{
+    public:
+        at_icc_land_frostwyrm() : AreaTriggerScript("at_icc_land_frostwyrm") { }
+
+        bool OnTrigger(Player* player, AreaTriggerEntry const* areaTrigger)
+        {
+            if (InstanceScript* instance = player->GetInstanceScript())
+            {
+                areaTrigger->id
+            }
+                if (instance->GetData(DATA_SPIRE_FROSTWYRM_STATE) == NOT_STARTED)
+                {
+                    instance->SetData(DATA_SPIRE_FROSTWYRM_STATE, IN_PROGRESS);
+                    // Emote on landing is 447
+                    // The frostwyrm needs a script.
+                    // There are 2 wyrms in fact, both land, they get in combat with the NPCs
+                    // "A screeching cry pierces the air above" when she lands.
+                    // The one from the opposite side does not land, however.
+                }
+
+            return true;
         }
 };
 
