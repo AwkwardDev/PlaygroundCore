@@ -88,9 +88,6 @@ class instance_icecrown_citadel : public InstanceMapScript
                 TeamInInstance = 0;
                 HeroicAttempts = MaxHeroicAttempts;
                 LadyDeathwisperElevatorGUID = 0;
-                RampartOfSkullsTrashCount = 0;
-                FirstSquadAssisted = false;
-                SecondSquadAssisted = false;
                 DeathbringerSaurfangGUID = 0;
                 DeathbringerSaurfangDoorGUID = 0;
                 DeathbringerSaurfangEventGUID = 0;
@@ -128,6 +125,8 @@ class instance_icecrown_citadel : public InstanceMapScript
                 IsOrbWhispererEligible = true;
                 ColdflameJetsState = NOT_STARTED;
                 BloodQuickeningState = NOT_STARTED;
+                FirstSquadState = NOT_STARTED;
+                SecondSquadState = NOT_STARTED;
                 BloodQuickeningTimer = 0;
                 BloodQuickeningMinutes = 0;
             }
@@ -402,30 +401,6 @@ class instance_icecrown_citadel : public InstanceMapScript
                         if (Creature* crok = instance->GetCreature(CrokScourgebaneGUID))
                             crok->AI()->SetGUID(creature->GetGUID(), ACTION_VRYKUL_DEATH);
                         break;
-                    case NPC_KORKRON_PRIMALIST:
-                    case NPC_KORKRON_DEFENDER:
-                    case NPC_KORKRON_NECROLYTE:
-                    case NPC_KORKRON_ORACLE:
-                    case NPC_KORKRON_REAVER:
-                    case NPC_KORKRON_SNIPER:
-                    case NPC_KORKRON_TEMPLAR:
-                    case NPC_KORKRON_VANQUISHER:
-                    case NPC_KORKRON_INVOKER:
-                        if (TeamInInstance == ALLIANCE)
-                            RampartOfSkullsTrashCount++;
-                        break;
-                    case NPC_SKYBREAKER_PROTECTOR:
-                    case NPC_SKYBREAKER_SUMMONER:
-                    case NPC_SKYBREAKER_LIGHT:
-                    case NPC_SKYBREAKER_DREADBLADE:
-                    case NPC_SKYBREAKER_MARKSMAN:
-                    case NPC_SKYBREAKER_VICAR:
-                    case NPC_SKYBREAKER_VINDICATOR:
-                    case NPC_SKYBREAKER_SORCERER:
-                    case NPC_SKYBREAKER_HIEROPHANT:
-                        if (TeamInInstance == HORDE)
-                            RampartOfSkullsTrashCount++;
-                        break;
                     default:
                         break;
                 }
@@ -588,12 +563,12 @@ class instance_icecrown_citadel : public InstanceMapScript
                         return BloodQuickeningState;
                     case DATA_HEROIC_ATTEMPTS:
                         return HeroicAttempts;
-                    case DATA_FIRST_SQUAD_ASSISTED:
-                        return FirstSquadAssisted;
-                    case DATA_SECOND_SQUAD_ASSISTED:
-                        return SecondSquadAssisted;
-                    case DATA_RAMPART_TRASH_COUNT:
-                        return RampartOfSkullsTrashCount;
+                    case DATA_FIRST_SQUAD_STATE:
+                        return FirstSquadState;
+                    case DATA_SECOND_SQUAD_STATE:
+                        return SecondSquadState;
+                    case DATA_SPIRE_FROSTWYRM_STATE:
+                        return SpireFrostWyrmState;
                     default:
                         break;
                 }
@@ -797,14 +772,30 @@ class instance_icecrown_citadel : public InstanceMapScript
             {
                 switch (type)
                 {
-                    case DATA_FIRST_SQUAD_ASSISTED:
-                        FirstSquadAssisted = data;
+                    case DATA_FIRST_SQUAD_STATE:
+                    {
+                        if (data == FirstSquadState)
+                            return;
+
+                        FirstSquadState = data;
                         break;
-                    case DATA_SECOND_SQUAD_ASSISTED:
-                        SecondSquadAssisted = data;
+                    }
+                    case DATA_SECOND_SQUAD_STATE:
+                    {
+                        if (data == SecondSquadState)
+                            return;
+
+                        SecondSquadState = data;
                         break;
-                    case DATA_RAMPART_TRASH_COUNT:
-                        RampartOfSkullsTrashCount = data;
+                    }
+                    case DATA_SPIRE_FROSTWYRM_STATE:
+                    {
+                        if (data == SpireFrostWyrmState)
+                            return;
+
+                        SpireFrostWyrmState = data;
+                        break;
+                    }
                     case DATA_BONED_ACHIEVEMENT:
                         IsBonedEligible = data ? true : false;
                         break;
@@ -1203,37 +1194,13 @@ class instance_icecrown_citadel : public InstanceMapScript
 
             void CreateTransport(uint32 goEntry, uint32 period)
             {
+                // Still a WIP
                 return;
-            }/*
-                const GameObjectTemplate* goInfo = sObjectMgr->GetGameObjectTemplate(goEntry);
-                if (!goInfo)
-                {
-                    sLog->outErrorDb("Transport ID: %u, Name: %s, will not be loaded, gameobject_template missing", goEntry, goInfo->name.c_str());
-                    return;
-                }
-                Transport *t = new Transport(period, goInfo->ScriptId);
-
-                std::set<uint32> mapsUsed;
-                if (!t->GenerateWaypoints(goInfo->moTransport.taxiPathId, mapsUsed))
-                {
-                    sLog->outErrorDb("Transport (path id %u) path size = 0. Transport ignored, check DBC files or the gameobject's data0 field.", goInfo->moTransport.taxiPathId);
-                    delete t;
-                    return;
-                }
-
-                uint32 transportLowGuid = sObjectMgr->GenerateLowGuid(HIGHGUID_MO_TRANSPORT);
-                // Creates the Gameobject
-                if (!t->Create(transportLowGuid, goEntry, t->m_WayPoints[0].mapid, t->m_WayPoints[0].x, t->m_WayPoints[0].y, t->m_WayPoints[0].z, 0.0f, 0, 0))
-                {
-                    delete t;
-                    return;
-                }
-            }*/
+            }
 
         protected:
             std::set<uint64> ColdflameJetGUIDs;
             uint64 LadyDeathwisperElevatorGUID;
-            uint64 RampartOfSkullsTrashCount;
             uint64 DeathbringerSaurfangGUID;
             uint64 DeathbringerSaurfangDoorGUID;
             uint64 DeathbringerSaurfangEventGUID;   // Muradin Bronzebeard or High Overlord Saurfang
@@ -1271,14 +1238,13 @@ class instance_icecrown_citadel : public InstanceMapScript
             uint32 BloodQuickeningState;
             uint32 HeroicAttempts;
             uint16 BloodQuickeningMinutes;
+            uint32 FirstSquadState;
+            uint32 SecondSquadState;
+            uint32 SpireFrostWyrmState;
             bool IsBonedEligible;
             bool IsOozeDanceEligible;
             bool IsNauseaEligible;
             bool IsOrbWhispererEligible;
-            bool FirstSquadAssisted;
-            bool SecondSquadAssisted;
-            Transport* playerShip;
-            Transport* enemyShip;
         };
 
         InstanceScript* GetInstanceScript(InstanceMap* map) const
