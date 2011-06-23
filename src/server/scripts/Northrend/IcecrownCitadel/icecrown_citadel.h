@@ -186,6 +186,8 @@ enum CreaturesIds
     NPC_GB_SKYBREAKER_MARINE                    = 36950,
     NPC_GB_KORKRON_ROCKETEER                    = 36982,
     NPC_GB_SKYBREAKER_MORTAR_SOLDIER            = 36978,
+    NPC_GB_KORKRON_AXETHROWER                   = 36968,
+    NPC_GB_SKYBREAKER_RIFLEMAN                  = 36969,
 
     // Deathbringer Saurfang
     NPC_DEATHBRINGER_SAURFANG                   = 37813,
