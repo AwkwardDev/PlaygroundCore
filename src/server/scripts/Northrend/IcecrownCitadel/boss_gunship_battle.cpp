@@ -15,8 +15,8 @@
  * - When players win, the enemy zeppelin escapes VERY quickly
  * Notes:
  * - Rocketeers seem to be able to cast on their own ship. For their spell, take a look at SPELL_ROCKET_ARTILLERY_TARGET_ALLIANCE and SPELL_ROCKET_ARTILLERY_TARGET_HORDE (Script effect, SpellEffect.cpp, EffectScriptEffect(EffIndex index))
- * Bla:
-  http://www.youtube.com/watch?v=ekjRGPawpas&NR=1
+ * Reference videos:
+   http://www.youtube.com/watch?v=ekjRGPawpas&NR=1
  */
 
 #include "ScriptPCH.h"
@@ -28,38 +28,48 @@ struct NPCsPositions
 {
     uint32 npcId; // `creature_template`.`entry`
     // The position should be set offseted from the transport's position.
-    Position posAlliance; // Position if the team in the instance is the Alliance
-    Position posHorde; // Position if the team in the instance is the Horde
-    uint32 spawnMode; // 1 : 10 men; 2 : 25men; 3 : every mode
+    Position position; // Position if the team in the instance is the Alliance
+    uint32 faction;
 };
 
-const NPCsPositions npcPositions[]=
-{
-    // Note: -472.596f, 2466.8701f, 190.7371f, 6.204f MURADIN_BRONZEBEARD PlrShip .begin()->second
+// Note: -472.596f, 2466.8701f, 190.7371f, 6.204f MURADIN_BRONZEBEARD
 
-    // Leaders
-    {NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
-    {NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
-    // UnitFrames NPCs
-    {NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
-    {NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
-    // The following NPCs are spawned only on the enemy ship, and twice.
-    // Kor'kron Rocketeer (3 of them in 25) only spawned if the team in instance is Alliance
-    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
-    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
-    {NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 2},
-    // Skybreaker Mortar Soldier (3 of them in 25) only spawned if the team in instance is Horde
-    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
-    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 3},
-    {NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, 2},
-    // Kor'kron Axethrower (8 on 25, 4 on 10)
-    // Skybreaker Riflemen (8 on 25, 4 on 10)
+// These NPCs have their positions on the enemy Ship, IF their faction is different from the team in instance
+const NPCsPositions enemyShipNPCList[]=
+{
+	// Alliance NPCs
+	{NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE},
+	{NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE},
+	{NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE}, // 4x 25Men, 2x 10Men
+	{NPC_GB_SKYBREAKER_RIFLEMAN,           {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE}, // 8/6x 25Men, 4x 10Men
+
+	// Horde NPCs
+	{NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, HORDE},
+	{NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, HORDE},
+	{NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, HORDE}, // 4x 25Men, 2x 10Men
+	{NPC_GB_KORKRON_AXETHROWER,            {0.0f, 0.0f, 0.0f, 0.0f}, HORDE}, // 8/6x 25Men, 4x 10Men
+};
+
+// These NPCs have their positions on the friendly Ship, IF their faction is different from the team in instance
+const NPCsPositions friendlyShipNPCList[]=
+{
+	// Alliance NPCs
+	{NPC_GB_MURADIN_BRONZEBEARD,           {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE},
+	{NPC_GB_SKYBREAKER,                    {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE},
+	{NPC_GB_SKYBREAKER_MORTAR_SOLDIER,     {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE}, // 4x 25Men, 2x 10Men
+	{NPC_GB_SKYBREAKER_RIFLEMAN,           {0.0f, 0.0f, 0.0f, 0.0f}, ALLIANCE}, // 8/6x 25Men, 4x 10Men
+
+	// Horde NPCs
+	{NPC_GB_HIGH_OVERLORD_SAURFANG,        {0.0f, 0.0f, 0.0f, 0.0f}, HORDE},
+	{NPC_GB_ORGRIMS_HAMMER,                {0.0f, 0.0f, 0.0f, 0.0f}, HORDE},
+	{NPC_GB_KORKRON_ROCKETEER,             {0.0f, 0.0f, 0.0f, 0.0f}, HORDE}, // 4x 25Men, 2x 10Men
+	{NPC_GB_KORKRON_AXETHROWER,            {0.0f, 0.0f, 0.0f, 0.0f}, HORDE}, // 8/6x 25Men, 4x 10Men
 };
 
 enum Spells
 {
     // Cannon
-    SPELL_OVERHEAT                    = 69487, // Triggers spell #69488 every 0.25s.
+    SPELL_OVERHEAT                    = 69487, // Triggers spell #69488 every 0.25s. It should consume 10 Energy but does not.
     SPELL_CANNON_BLAST                = 69399,
     SPELL_INCINERATING_BLAST          = 69401,
 
@@ -106,7 +116,7 @@ enum Events
     EVENT_INTRO_ALLIANCE_4, // Muradin Bronzebeard yells: EVASIVE ACTION! MAN THE GUNS!
     EVENT_INTRO_ALLIANCE_5, // Muradin Bronzebeard yells: Cowardly dogs! Ye blindsided us!
     EVENT_INTRO_ALLIANCE_6, // High Overlord Saurfang yells: This is not your battle, dwarf. Back down or we will be forced to destroy your ship.
-    EVENT_INTRO_ALLIANCE_7, // Muradin Bronzebeard yells: Not me battle? I dunnae who ye﻿ think ye are, mister, but I got a score to settle with Arthas and yer not gettin' in me way! FIRE ALL GUNS! FIRE! FIRE!
+    EVENT_INTRO_ALLIANCE_7, // Muradin Bronzebeard yells: Not me battle? I dunnae who yeï»¿ think ye are, mister, but I got a score to settle with Arthas and yer not gettin' in me way! FIRE ALL GUNS! FIRE! FIRE!
 
     // Rampart of Skulls NPCs Events
     EVENT_WRATH,
@@ -130,22 +140,27 @@ enum Texts
 {
     // Kor'kron Primalist
     SAY_FIRST_SQUAD_RESCUED_HORDE_0  = 0,
+
     // Kor'kron Invoker
     SAY_FIRST_SQUAD_RESCUED_HORDE_1  = 0,
+
     // Kor'kron Defender
     SAY_SECOND_SQUAD_RESCUED_HORDE_0 = 0,
     SAY_SECOND_SQUAD_RESCUED_HORDE_1 = 1,
 
     // Skybreaker Vindicator
     SAY_FIRST_SQUAD_RESCUED_ALLIANCE_0  = 0,
+
     // Skybreaker Sorcerer
     SAY_FIRST_SQUAD_RESCUED_ALLIANCE_1  = 0,
+
     // Skybreaker Protector
     SAY_SECOND_SQUAD_RESCUED_ALLIANCE_0 = 0,
     SAY_SECOND_SQUAD_RESCUED_ALLIANCE_1 = 1,
     SAY_SECOND_SQUAD_RESCUED_ALLIANCE_2 = 2,
-
-    SAY_SUMMON_BATTLE_STANDARD          = 1, // Invoker & Sorcerer
+	
+	// Kor'kron Invoker & Skybreaker Sorcerer
+    SAY_SUMMON_BATTLE_STANDARD          = 1, 
 
     // -- These two are left to do
     // A screeching cry pierces the air above! (Widescreen Yellow Emote)
@@ -184,6 +199,8 @@ enum Texts
 };
 
 /* ----------------------------------- Behavior : --------------------------------- */
+// Transport* wut = SetTransportWaypointId(CreateTransport(GoEntry, period), wpId, GoEntry));
+// Todo: remake this, this is ugly.
 Transport* CreateTransport(uint32 goEntry, uint32 period)
 {
     const GameObjectTemplate* goInfo = sObjectMgr->GetGameObjectTemplate(goEntry);
@@ -226,26 +243,24 @@ Transport* SetTransportWaypointId(Transport* t, uint32 wpId, uint32 goEntry)
     return t;
 }
 
-bool AddPassengers(Transport* t, const NPCsPositions* npcList, uint32 teamInInstance, uint32 transportFaction)
+bool AddPassengers(Transport* t, uint32 teamInInstance, uint32 transportFaction)
 {
     bool is25MenMap = (t->GetMap()->ToInstanceMap()->GetMaxPlayers() == 25);
-    while (npcList->npcId)
-    {
-        bool canSpawn = false;
-        if ((npcList->spawnMode == 2 && is25MenMap) || // Mode 2 & 25Men to spawn.
-            (npcList->spawnMode == 1 && !is25MenMap) || // Mode 1 & !25Men to spawn.
-            npcList->spawnMode == 3) // Mode 3, always spawned
-            bool canSpawn = true;
 
-        if (canSpawn)
-        {
-            // Todo : give my brain some fresh air
-        }
-        npcList++;
-    }
+	const NPCsPositions* list = (transportFaction == teamInInstance ? friendlyShipNPCList : enemyShipNPCList);
+
+	while (list->npcId)
+	{
+		// Only spawn NPCs that have the same faction as the transport's
+		// In fact the transport's faction will be set raw when calling the function,
+		// like AddPassengers(skybreaker, instance->GetData(DATA_TEAM_IN_INSTANCE), ALLIANCE);
+		if (list->faction == transportFaction)
+			t->AddNPCPassenger(t->GetTransGUID(), list->npcId, list->position.m_positionX, list->position.m_positionY, list->position.m_positionZ, list->position.m_orientation, 100);
+		++list;
+	}
 }
 
-/* ----------------------------------- Gunship NPCs & Transports ----------------------------------- */
+/* ----------------------------------- Scripts ----------------------------------- */
 
 /* Muradin Bronzebeard */
 class npc_muradin_gunship : public CreatureScript
@@ -253,13 +268,13 @@ class npc_muradin_gunship : public CreatureScript
     public:
         npc_muradin_gunship() : CreatureScript("npc_muradin_gunship") { }
 
-        bool OnGossipHello(Player* pPlayer, Creature* pCreature)
+        bool OnGossipHello(Player* player, Creature* pCreature)
         {
             InstanceScript* pInstance = pCreature->GetInstanceScript();
             if (pInstance && pInstance->GetBossState(DATA_GUNSHIP_EVENT) != DONE)
             {
-                pPlayer->ADD_GOSSIP_ITEM(0, "My companions are all accounted for, Muradin. Let's go!", 631, 1001);
-                pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+                player->ADD_GOSSIP_ITEM(0, "My companions are all accounted for, Muradin. Let's go!", 631, 1001);
+                player->SEND_GOSSIP_MENU(player->GetGossipTextId(pCreature), pCreature->GetGUID());
                 return true;
             }
 
