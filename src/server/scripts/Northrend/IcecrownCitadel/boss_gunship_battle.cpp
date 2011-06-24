@@ -1,4 +1,4 @@
-﻿/* Gunship Battle
+/* Gunship Battle
  * Dev start : 29 / 05 / 2011
  * TODO List :
  * - [COMPLETE] Fix Below Zero to freeze only cannons.
