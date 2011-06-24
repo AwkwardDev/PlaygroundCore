@@ -377,7 +377,6 @@ class npc_zafod_boombox : public CreatureScript
             if (action == 1)
             {
                 // Seurity, this shouldn't happen. Maybe useless.
-                uint32 itemId = 49278;
                 uint32 curItemCount = player->GetItemCount(49278, false);
                 if (curItemCount >= 1)
                 {
@@ -585,6 +584,46 @@ class npc_skybreaker_rifleman : public CreatureScript
 /* Skybreaker Sorcerer & Kor'kron Battle-Mage */
 /* Won't be able to do these two unless I have sniffs or can perform tests on local */
 
+/* The Skybreaker */
+class npc_the_skybreaker : public CreatureScript
+{
+    public:
+        npc_the_skybreaker() : CreatureScript("npc_the_skybreaker") { }
+
+        struct npc_the_skybreakerAI : public ScriptedAI
+        {
+            npc_the_skybreakerAI(Creature* creature) : ScriptedAI(creature),
+                _instance(creature->GetInstanceScript())
+            {
+            }
+
+            void JustDied()
+            {
+                if (_instance->GetBossState(DATA_GUNSHIP_EVENT) == IN_PROGRESS)
+                {
+                    _instance->SendEncounterUnit(ENCOUNTER_FRAME_REMOVE, me);
+                    _instance->SetBossState(DATA_GUNSHIP_EVENT, (_instance->GetData(DATA_TEAM_IN_INSTANCE) == ALLIANCE ? FAIL : DONE));
+                }
+            }
+
+            void UpdateAI(const uint32 diff)
+            {
+                // Does not enter combat
+                if (_instance->GetBossState(DATA_GUNSHIP_EVENT) != IN_PROGRESS)
+                    return;
+            }
+
+        private:
+            EventMap _events;
+            InstanceScript* _instance;
+        };
+
+        CreatureAI* GetAI(Creature* pCreature) const
+        {
+            return new npc_the_skybreakerAI(pCreature);
+        }
+};
+
 /* ----------------------------------- Rampart of Skulls NPCs ----------------------------------- */
 
 /* Kor'kron Primalist */
@@ -614,9 +653,9 @@ class npc_korkron_primalist: public CreatureScript
 
                 if (instance->GetData(DATA_TEAM_IN_INSTANCE) == HORDE)
                 {
-                    if (!instance->GetData(DATA_FIRST_SQUAD_ASSISTED)) // boolean, true = done
+                    if (instance->GetData(DATA_FIRST_SQUAD_STATE) != DONE)
                     {
-                        instance->SetData(DATA_FIRST_SQUAD_ASSISTED, true);
+                        instance->SetData(DATA_FIRST_SQUAD_STATE, DONE);
                         events.ScheduleEvent(EVENT_FIRST_SQUAD_ASSISTED_1, 100);
                         events.ScheduleEvent(EVENT_FIRST_SQUAD_ASSISTED_2, 15000); // TODO : fix the timer
                     }
@@ -636,6 +675,8 @@ class npc_korkron_primalist: public CreatureScript
                                 tempUnit->AI()->Talk(SAY_FIRST_SQUAD_RESCUED_HORDE_1);
                             break;
                         case EVENT_WRATH:
+                            if (me->HasUnitState(UNIT_STAT_CASTING))
+                                break;
                             if (me->isInCombat())
                                 if (!me->getVictim()->IsFriendlyTo(me))
                                     me->CastSpell(me->getVictim(), SPELL_WRATH, false);
@@ -725,8 +766,6 @@ class at_icc_land_frostwyrm : public AreaTriggerScript
         {
             if (InstanceScript* instance = player->GetInstanceScript())
             {
-                areaTrigger->id
-            }
                 if (instance->GetData(DATA_SPIRE_FROSTWYRM_STATE) == NOT_STARTED)
                 {
                     instance->SetData(DATA_SPIRE_FROSTWYRM_STATE, IN_PROGRESS);
@@ -736,6 +775,7 @@ class at_icc_land_frostwyrm : public AreaTriggerScript
                     // "A screeching cry pierces the air above" when she lands.
                     // The one from the opposite side does not land, however.
                 }
+            }
 
             return true;
         }
@@ -743,11 +783,25 @@ class at_icc_land_frostwyrm : public AreaTriggerScript
 
 void AddSC_boss_gunship_battle()
 {
+    // Transports
     new transport_gunship();
+
+    // Alliance
     new npc_muradin_gunship();
+    new npc_the_skybreaker();
+    new npc_skybreaker_rifleman();
+
+    // Horde
+    new npc_korkron_axethrower();
+    new npc_korkron_primalist();
+
+    // AreaTriggers
+    new at_icc_land_frostwyrm();
+
+    // Spells
+    new spell_icc_overheat();
+
+    // Various
     new npc_zafod_boombox();
     new npc_gunship_cannon();
-    new npc_korkron_axethrower();
-    new npc_skybreaker_rifleman();
-    new spell_icc_overheat();
 }

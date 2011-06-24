@@ -127,6 +127,7 @@ class instance_icecrown_citadel : public InstanceMapScript
                 BloodQuickeningState = NOT_STARTED;
                 FirstSquadState = NOT_STARTED;
                 SecondSquadState = NOT_STARTED;
+                SpireFrostWyrmState = NOT_STARTED;
                 BloodQuickeningTimer = 0;
                 BloodQuickeningMinutes = 0;
             }
