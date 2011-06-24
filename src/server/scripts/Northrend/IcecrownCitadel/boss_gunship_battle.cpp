@@ -281,7 +281,7 @@ class transport_gunship : public TransportScript
                 {
                     case HORDE:
                         player->AddAura(SPELL_ON_ORGRIMS_HAMMERS_DECK, player);
-                        break;
+                        break; 
                     case ALLIANCE:
                         player->AddAura(SPELL_ON_SKYBREAKERS_DECK, player);
                         break;
