@@ -299,6 +299,16 @@ enum GameObjectsIds
     GO_ICEWALL                              = 201911,
     GO_LORD_MARROWGAR_S_ENTRANCE            = 201857,
 
+    // Gunship Battle Transports (here for reference)
+    // All of them except the first one are guesses, based on their displayId.
+    GO_SKYBREAKER_FRIENDLY                  = 201811, // Skybreaker if team in instance is ALLIANCE
+    GO_SKYBREAKER_UNFRIENDLY                = 201580, // Skybreaker if team in instance is HORDE
+    GO_ORGRIMS_HAMMER_FRIENDLY              = 201812, // Orgrim's Hammer if team in instance is HORDE
+    GO_ORGRIMS_HAMMER_UNFRIENDLY            = 201581, // Orgrim's Hammer if team in instance is ALLIANCE
+    // Just for me to remember:
+    // SELECT * FROM `gameobject_template` WHERE name LIKE "%Skybreaker%" OR name LIKE "%Orgrim's%"
+    // Strangely enough, they do not have the transport flag (except 192241 & 192242, which I guess are used in the Icecrown Area).
+
     // Lady Deathwhisper
     GO_ORATORY_OF_THE_DAMNED_ENTRANCE       = 201563,
     GO_LADY_DEATHWHISPER_ELEVATOR           = 202220,
