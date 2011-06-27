@@ -89,7 +89,7 @@ enum Spells
 
     // Muradin Bronzebeard / High Overlord Saurfang
     SPELL_CLEAVE                      = 15284,
-    SPELL_RENDING_THROW                  = 70309,
+    SPELL_RENDING_THROW               = 70309,
     SPELL_TASTE_OF_BLOOD              = 69634,
 
     // Kor'kron Battle-mage & Skybreaker Sorcerer
@@ -707,7 +707,7 @@ class npc_the_skybreaker : public CreatureScript
                 }
             }
 
-            void UpdateAI(const int32 diff)
+            void UpdateAI(const uint32 diff)
             {
                 // Does not enter combat
                 if (_instance->GetBossState(DATA_GUNSHIP_EVENT) != IN_PROGRESS)
@@ -851,7 +851,7 @@ class spell_icc_overheat : public SpellScriptLoader
             }
         };
 
-        AuraScript* GetAuraScript()     
+        AuraScript* GetAuraScript() const
         {
             return new spell_icc_overheat_AuraScript();
         }
