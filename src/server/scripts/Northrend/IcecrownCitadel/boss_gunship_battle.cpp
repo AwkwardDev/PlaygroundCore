@@ -423,12 +423,12 @@ class npc_muradin_gunship : public CreatureScript
             InstanceScript* _instance;
             bool canCleave;
         };
-        
+
         CreatureAI* GetAI(Creature* pCreature) const
         {
             return new npc_muradin_gunshipAI(pCreature);
         }
-        
+
         private:
             InstanceScript* pInstance;
             Transport* playersBoat;
@@ -446,7 +446,6 @@ class npc_zafod_boombox : public CreatureScript
             if (pPlayer->GetItemCount(49278, false) == 0)
                 pPlayer->ADD_GOSSIP_ITEM(0, "Yeah, I'm sure safety is your top priority. Give me a rocket pack.", 631, 1);
             pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
-            
             return true;
         }
 
