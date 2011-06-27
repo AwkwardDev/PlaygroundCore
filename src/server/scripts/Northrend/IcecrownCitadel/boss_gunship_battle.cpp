@@ -368,6 +368,7 @@ class npc_zafod_boombox : public CreatureScript
             if (pPlayer->GetItemCount(49278, false) == 0)
                 pPlayer->ADD_GOSSIP_ITEM(0, "Yeah, I'm sure safety is your top priority. Give me a rocket pack.", 631, 1);
             pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
+            return true;
         }
 
         bool OnGossipSelect(Player* player, Creature* pCreature, uint32 /*sender*/, uint32 action)
