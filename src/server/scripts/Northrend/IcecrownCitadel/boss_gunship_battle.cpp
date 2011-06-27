@@ -23,6 +23,7 @@
 #include "icecrown_citadel.h"
 #include "MapManager.h"
 #include "Transport.h"
+#include "Spell.h"
 
 struct NPCsPositions
 {
@@ -857,6 +858,46 @@ class spell_icc_overheat : public SpellScriptLoader
         }
 };
 
+/* Rocket Pack - Triggers 68645 for the effect */
+/* 68721 is a big red ball */
+/* 69193 is the damage when landing, it does not include the visual */
+class spell_icc_rocket_pack : public SpellScriptLoader
+{
+    public:
+        spell_icc_rocket_pack() : SpellScriptLoader("spell_icc_rocket_boots") { }
+
+        class spell_icc_rocket_pack_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_icc_rocket_pack_SpellScript);
+
+            SpellCastResult CheckRequirement()
+            {
+                Unit* caster = GetOriginalCaster();
+                if (caster->GetTypeId() != TYPEID_PLAYER)
+                    return SPELL_FAILED_TARGET_NOT_PLAYER;
+
+                // The aura checks if the player has the aura that Zafod Boombox uses. (SPELL_EFFECT_APPLY_AREA_AURA_FRIEND)
+                if (!caster->ToPlayer()->HasAura(70348)) // Rocket Pack Useable
+                {
+                    Spell::SendCastResult(caster->ToPlayer(), GetSpellInfo(), 0, SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW);
+                    return SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
+                }
+
+                return SPELL_CAST_OK;
+            }
+
+            void Register()
+            {
+                OnCheckCast += SpellCheckCastFn(spell_icc_rocket_pack_SpellScript::CheckRequirement);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_icc_rocket_pack_SpellScript();
+        }
+};
+
 /* ---------------------------------- AreaTrigger Scripts ------------------------------------- */
 class at_icc_land_frostwyrm : public AreaTriggerScript
 {
@@ -901,6 +942,7 @@ void AddSC_boss_gunship_battle()
 
     // Spells
     new spell_icc_overheat();
+    new spell_icc_rocket_pack();
 
     // Various
     new npc_zafod_boombox();
