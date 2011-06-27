@@ -32,9 +32,13 @@ INSERT INTO `npc_spellclick_spells` (`npc_entry`, `spell_id`, `quest_start`, `qu
 -- Linked spells
 DELETE FROM `spell_linked_spell` WHERE `spell_trigger` = 71193 AND `spell_effect` = -71188;
 DELETE FROM `spell_linked_spell` WHERE `spell_trigger` = 71195 AND `spell_effect` = -71193;
+DELETE FROM `spell_linked_spell` WHERE `spell_trigger` = 68645 AND `spell_effect` = 69193;
+DELETE FROM `spell_linked_spell` WHERE `spell_trigger` = 68645 AND `spell_effect` = 69188;
 INSERT INTO `spell_linked_spell` (`spell_trigger`, `spell_effect`, `type`, `comment`) VALUES
-(71193, -71188, 0, 'Gunship battle - Veteran removes Experimented'),
-(71195, -71193, 0, 'Gunship battle - Elite removes Veteran');
+(71193, -71188, 0, 'Gunship Battle - Veteran removes Experimented'),
+(71195, -71193, 0, 'Gunship Battle - Elite removes Veteran'),
+-- (68645, 69188, 0, 'Gunship Battle - Fix visual for Rocket Pack'), -- Does not get removed for some reason
+(68645, 69193, 0, 'Gunship Battle - Fix visual for Rocket Pack');
 
 -- Add spell conditions for 69705 (Below Zero)
 SET @SPELL := 69705;

@@ -858,9 +858,9 @@ class spell_icc_overheat : public SpellScriptLoader
         }
 };
 
-/* Rocket Pack - Triggers 68645 for the effect */
+/* Rocket Pack */
 /* 68721 is a big red ball */
-/* 69193 is the damage when landing, it does not include the visual */
+/* 69193 is the damage when landing, it does not include the visual (which is 69192) */
 class spell_icc_rocket_pack : public SpellScriptLoader
 {
     public:
