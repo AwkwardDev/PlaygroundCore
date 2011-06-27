@@ -87,6 +87,11 @@ enum Spells
     SPELL_REGROWTH                    = 69882,
     SPELL_REJUVENATION                = 69898,
 
+    // Muradin Bronzebeard / High Overlord Saurfang
+    SPELL_CLEAVE                      = 15284,
+    SPELL_RENDING_THROW                  = 70309,
+    SPELL_TASTE_OF_BLOOD              = 69634,
+
     // Kor'kron Battle-mage & Skybreaker Sorcerer
     SPELL_BELOW_ZERO                  = 69705,
 
@@ -134,6 +139,15 @@ enum Events
     // Kor'kron Axethrower & Skybreaker Rifleman
     EVENT_HURL_AXE,
     EVENT_SHOOT,
+
+    // Muradin Bronzebeard & High Overlord Saurfang
+    EVENT_RENDING_THROW,
+    EVENT_TASTE_OF_BLOOD,
+
+    // Misc (used in various NPCs)
+    EVENT_SPAWN_MAGE,
+    EVENT_RESPAWN_RIFLEMEN,
+    EVENT_RESPAWN_ROCKETEER,
 };
 
 enum Texts
@@ -196,6 +210,13 @@ enum Texts
     SAY_NEW_BATTLE_MAGE_SPAWNED      = 8,
     SAY_HORDE_VICTORY                = 9,
     SAY_HORDE_DEFEAT                 = 10, // How will we handle that case ? Ie. the player loses  
+};
+
+enum Actions
+{
+    ACTION_SPAWN_MAGE,
+    ACTION_RESPAWN_RIFLEMEN,
+    ACTION_RESPAWN_ROCKETEERS,
 };
 
 /* ----------------------------------- Behavior : --------------------------------- */
@@ -356,26 +377,33 @@ class npc_muradin_gunship : public CreatureScript
             npc_muradin_gunshipAI(Creature *creature) : ScriptedAI(creature),
                 _instance(creature->GetInstanceScript())
             {
-                Reset();
             }
 
-            void Reset()
+            void DoAction(int32 const action)
             {
-                canCleave = false;
-                me->AddAura(SPELL_BATTLE_FURY, me);
-                
+                switch (action)
+                {
+                    case ACTION_SPAWN_MAGE:
+                        events.ScheduleEvent(EVENT_SPAWN_MAGE, 100);
+                        break;
+                    case ACTION_RESPAWN_RIFLEMEN:
+                        events.ScheduleEvent(EVENT_RESPAWN_RIFLEMEN, 100);
+                        break;
+                    case ACTION_RESPAWN_ROCKETEERS:
+                        events.ScheduleEvent(EVENT_RESPAWN_ROCKETEER, 100);
+                        break;
+                }
             }
 
             void UpdateAI(const uint32 diff)
             {
                 if (me->getVictim()->HasAura(SPELL_ON_ORGRIMS_HAMMERS_DECK))
-                    if (!me->getVictim()->IsWithinDistInMap(me, 50, false)) // Fix the distance
-                    {
-                        events.CancelEvent(EVENT_RENDING_THROW);
+                {
+                    if (!me->getVictim()->IsWithinDistInMap(me, 50.0f, false)) // Todo: Fix the distance
                         EnterEvadeMode();
-                    }
                     else
                         events.ScheduleEvent(EVENT_RENDING_THROW, 100);
+                }
 
                 events.Update(diff);
 
@@ -383,12 +411,8 @@ class npc_muradin_gunship : public CreatureScript
                 {
                     switch (eventId)
                     {
-                        case EVENT_CLEAVE:
-                            canCleave = true;
-                            break;
                         case EVENT_RENDING_THROW:
-                            // Todo, only useable if the victim is on the other ship and still in range (i.e the line formed by cannons)
-                            if (me->getVictim()->IsWithinDistInMap(me, 50, false)) // Fix the distance
+                            if (me->getVictim()->IsWithinDistInMap(me, 50.0f, false)) // Todo: Fix the distance
                             {
                                 DoCastVictim(SPELL_RENDING_THROW);
                                 events.ScheduleEvent(EVENT_RENDING_THROW, 5000); // Todo: fix the timer
@@ -401,21 +425,19 @@ class npc_muradin_gunship : public CreatureScript
                             events.ScheduleEvent(EVENT_TASTE_OF_BLOOD, 15000); // Todo: fix the timer
                             break;
                         case EVENT_SPAWN_MAGE:
-                            // Todo. Maybe make this in DoAction()
+                            Talk(SAY_NEW_MAGE_SPAWNED);
                             break;
                         case EVENT_RESPAWN_RIFLEMEN:
-                            // Same as mages.
+                            Talk(SAY_NEW_RIFLEMEN_SPAWNED);
                             break;
                         case EVENT_RESPAWN_ROCKETEER:
-                            // Still.
+                            Talk(SAY_NEW_ROCKETEERS_SPAWNED);
                             break;
                     }
                 }
 
-                if (canCleave)
+                if (!me->GetCurrentSpell(CURRENT_MELEE_SPELL))
                     DoCastVictim(SPELL_CLEAVE);
-                else
-                    DoMeleeAttackIfReady();
             }
 
         private:
@@ -685,7 +707,7 @@ class npc_the_skybreaker : public CreatureScript
                 }
             }
 
-            void UpdateAI(const uint32 diff)
+            void UpdateAI(const int32 diff)
             {
                 // Does not enter combat
                 if (_instance->GetBossState(DATA_GUNSHIP_EVENT) != IN_PROGRESS)
@@ -829,7 +851,7 @@ class spell_icc_overheat : public SpellScriptLoader
             }
         };
 
-        AuraScript* GetAuraScript() const
+        AuraScript* GetAuraScript()     
         {
             return new spell_icc_overheat_AuraScript();
         }
@@ -848,7 +870,7 @@ class at_icc_land_frostwyrm : public AreaTriggerScript
                 if (instance->GetData(DATA_SPIRE_FROSTWYRM_STATE) == NOT_STARTED)
                 {
                     instance->SetData(DATA_SPIRE_FROSTWYRM_STATE, IN_PROGRESS);
-                    // Emote on landing is 447
+                    // Emote on landing seems to be 447
                     // The frostwyrm needs a script.
                     // There are 2 wyrms in fact, both land, they get in combat with the NPCs
                     // "A screeching cry pierces the air above" when she lands.

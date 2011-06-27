@@ -88,6 +88,8 @@ class instance_icecrown_citadel : public InstanceMapScript
                 TeamInInstance = 0;
                 HeroicAttempts = MaxHeroicAttempts;
                 LadyDeathwisperElevatorGUID = 0;
+                GunshipBattleMuradinGUID = 0;
+                GunshipBattleSaurfangGUID = 0;
                 DeathbringerSaurfangGUID = 0;
                 DeathbringerSaurfangDoorGUID = 0;
                 DeathbringerSaurfangEventGUID = 0;
@@ -266,6 +268,12 @@ class instance_icecrown_citadel : public InstanceMapScript
                     case NPC_SKYBREAKER_SORCERER:
                         if (TeamInInstance == HORDE)
                             creature->UpdateEntry(NPC_KORKRON_INVOKER, HORDE);
+                        break;
+                    case NPC_GB_MURADIN_BRONZEBEARD:
+                        GunshipBattleMuradinGUID = creature->GetGUID();
+                        break;
+                    case NPC_GB_HIGH_OVERLORD_SAURFANG:
+                        GunshipBattleSaurfangGUID = creature->GetGUID();
                         break;
                     case NPC_DEATHBRINGER_SAURFANG:
                         DeathbringerSaurfangGUID = creature->GetGUID();
@@ -1118,7 +1126,8 @@ class instance_icecrown_citadel : public InstanceMapScript
 
                 std::ostringstream saveStream;
                 saveStream << "I C " << GetBossSaveData() << HeroicAttempts << " "
-                    << ColdflameJetsState << " " << BloodQuickeningState << " " << BloodQuickeningMinutes;
+                    << ColdflameJetsState << " " << BloodQuickeningState << " " << BloodQuickeningMinutes << " "
+                    << FirstSquadState << " " << SecondSquadState << " " << SpireFrostWyrmState;
 
                 OUT_SAVE_INST_DATA_COMPLETE;
                 return saveStream.str();
@@ -1159,6 +1168,10 @@ class instance_icecrown_citadel : public InstanceMapScript
                     loadStream >> temp;
                     BloodQuickeningState = temp ? DONE : NOT_STARTED;   // DONE means finished (not success/fail)
                     loadStream >> BloodQuickeningMinutes;
+
+                    loadStream >> FirstSquadState;
+                    loadStream >> SecondSquadState;
+                    loadStream >> SpireFrostWyrmState;
                 }
                 else
                     OUT_LOAD_INST_DATA_FAIL;
@@ -1202,6 +1215,8 @@ class instance_icecrown_citadel : public InstanceMapScript
         protected:
             std::set<uint64> ColdflameJetGUIDs;
             uint64 LadyDeathwisperElevatorGUID;
+            uint64 GunshipBattleMuradinGUID;
+            uint64 GunshipBattleSaurfangGUID;
             uint64 DeathbringerSaurfangGUID;
             uint64 DeathbringerSaurfangDoorGUID;
             uint64 DeathbringerSaurfangEventGUID;   // Muradin Bronzebeard or High Overlord Saurfang
