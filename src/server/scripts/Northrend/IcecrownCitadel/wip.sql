@@ -37,6 +37,7 @@ DELETE FROM `spell_linked_spell` WHERE `spell_trigger` = 71193 AND `spell_effect
 DELETE FROM `spell_linked_spell` WHERE `spell_trigger` = 71195 AND `spell_effect` = -71193;
 DELETE FROM `spell_linked_spell` WHERE `spell_trigger` = 68645 AND `spell_effect` = 69193;
 DELETE FROM `spell_linked_spell` WHERE `spell_trigger` = 68645 AND `spell_effect` = 69188;
+DELETE FROM `spell_linked_spell` WHERE `spell_trigger` = 69193 AND `spell_effect` = 69192;
 INSERT INTO `spell_linked_spell` (`spell_trigger`, `spell_effect`, `type`, `comment`) VALUES
 (71193, -71188, 0, 'Gunship Battle - Veteran removes Experimented'),
 (71195, -71193, 0, 'Gunship Battle - Elite removes Veteran'),

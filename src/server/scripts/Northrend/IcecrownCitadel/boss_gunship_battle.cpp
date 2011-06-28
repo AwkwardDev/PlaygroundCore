@@ -864,7 +864,7 @@ class spell_icc_overheat : public SpellScriptLoader
 class spell_icc_rocket_pack : public SpellScriptLoader
 {
     public:
-        spell_icc_rocket_pack() : SpellScriptLoader("spell_icc_rocket_boots") { }
+        spell_icc_rocket_pack() : SpellScriptLoader("spell_icc_rocket_pack") { }
 
         class spell_icc_rocket_pack_SpellScript : public SpellScript
         {
@@ -917,6 +917,37 @@ class spell_icc_rocket_pack : public SpellScriptLoader
         AuraScript* GetAuraScript() const
         {
             return new spell_icc_rocket_pack_AuraScript();
+        }
+};
+
+/* Remove Rocket Pack */
+class spell_icc_remove_rocket_pack : public SpellScriptLoader
+{
+    public:
+        spell_icc_remove_rocket_pack() : SpellScriptLoader("spell_icc_remove_rocket_pack") { }
+
+        class spell_icc_remove_rocket_pack_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_icc_remove_rocket_pack_SpellScript);
+
+            void OnEffect(SpellEffIndex effIndex)
+            {
+                Player* hitPlr = GetHitPlayer();
+                Unit* caster = GetCaster();
+
+                if (!hitPlr)
+                    return;
+            }
+
+            void Register()
+            {
+                OnEffect += SpellEffectFn(spell_icc_remove_rocket_pack::OnEffect, 0, SPELL_EFFECT_SCRIPT_EFFECT);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_icc_remove_rocket_pack_SpellScript();
         }
 };
 
