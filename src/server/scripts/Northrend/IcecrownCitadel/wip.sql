@@ -1,27 +1,30 @@
 -- ScriptNames Updates
 UPDATE `creature_template` SET `ScriptName` = 'npc_muradin_gunship' WHERE `entry` = 36948;
+UPDATE `creature_template` SET `ScriptName` = 'npc_skybreaker_rifleman' WHERE `entry` = 36969;
+
 UPDATE `creature_template` SET `ScriptName` = 'npc_saurfang_gunship' WHERE `entry` = 36939;
+UPDATE `creature_template` SET `ScriptName` = 'npc_korkron_axethrower' WHERE `entry` = 36968;
+UPDATE `creature_template` SET `ScriptName` = 'npc_korkron_primalist' WHERE `entry` = 37030;
+
 UPDATE `creature_template` SET `ScriptName` = 'npc_zafod_boombox' WHERE `entry` = 37184;
 UPDATE `creature_template` SET `ScriptName` = 'npc_gunship_cannon' WHERE `entry` = 36838;
 UPDATE `creature_template` SET `ScriptName` = 'npc_gunship_cannon' WHERE `entry` = 36839;
-UPDATE `creature_template` SET `ScriptName` = 'npc_korkron_axethrower' WHERE `entry` = 36968;
-UPDATE `creature_template` SET `ScriptName` = 'npc_skybreaker_rifleman' WHERE `entry` = 36969;
 
 -- SpellScripts
-DELETE FROM `spell_script_names` WHERE spell_id IN (69487);
+DELETE FROM `spell_script_names` WHERE spell_id IN (69487, 69188);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (69487, "spell_icc_overheat"),
-(69188, "spell_ic_rocket_pack");
+(69188, "spell_icc_rocket_pack");
 
 -- Templates updates
 UPDATE `creature_template` SET `exp` = 2, `VehicleId` = 554, `RegenHealth` = 0, `spell1` = 69399, `spell2` = 69401 WHERE entry IN (36838, 36839);
 
 -- Creature template Addon
-SET @ZAFOD := 37184;
-DELETE FROM creature_template_addon WHERE entry = @ZAFOD;
+DELETE FROM creature_template_addon WHERE entry IN (67184, 36948, 36939);
 INSERT INTO `creature_template_addon` (`entry`, `path_id`, `mount`, `bytes1`, `bytes2`, `emote`, `auras`) VALUES
- (@ZAFOD, 0, 0, 0, 0, 0, '70348 69188');
-
+(37184, 0, 0, 0, 0, 0, '70348 69188'), -- Zafod Boombox (still unsure about 70348)
+(36948, 0, 0, 0, 0, 0, '69637'), -- Muradin Bronzebeard's Battle Fury
+(36939, 0, 0, 0, 0, 0, '69637'); -- High Overlord Saurfang's Battle Fury
 
 -- Vehicle spellclick
 DELETE FROM `npc_spellclick_spells` WHERE `npc_entry` IN (36838, 36839);
@@ -39,6 +42,7 @@ INSERT INTO `spell_linked_spell` (`spell_trigger`, `spell_effect`, `type`, `comm
 (71195, -71193, 0, 'Gunship Battle - Elite removes Veteran'),
 -- (68645, 69188, 0, 'Gunship Battle - Fix visual for Rocket Pack'), -- Does not get removed for some reason
 (68645, 69193, 0, 'Gunship Battle - Fix visual for Rocket Pack');
+(69193, 69192, 0, 'Gunship Battle - Cast Rocket Burst when landing with Rocket Pack');
 
 -- Add spell conditions for 69705 (Below Zero)
 SET @SPELL := 69705;
@@ -60,6 +64,14 @@ INSERT INTO `smart_scripts` (`entryorguid`,`source_type`,`id`,`link`,`event_type
 (@SKYBREAKER,0,0,0,1,0,100,1,1000,1000,1000,1000,11,@ASPELL,2,0,0,0,0,1,0,0,0,0,0,0,0, 'Skybreaker Battle Standard - On spawn & reset - Cast spell 69808');
 
 -- Texts
+SET @MURADIN := 36948;
+SET @OVERLORD := 36939;
+SET @PRIMALIST := 37030;
+SET @INVOKER := 37033;
+SET @DEFENDER := 37032;
+SET @VINDICATOR := 37003;
+SET @SORCERER := 37026;
+SET @PROTECTOR := 36998;
 DELETE FROM `creature_text` WHERE `entry` IN (37030, 37033, 37032);
 INSERT INTO `creature_text` (`entry`,`groupid`,`id`,`text`,`type`,`language`,`probability`,`emote`,`duration`,`sound`,`comment`) VALUES
 (@MURADIN,  0, 0, 'Fire up the engines! We got a meetin'' with destiny, lads!', 14, 0, 100, 0, 0, SOUNDID, 'Muradin Bronzebeard - SAY_INTRO_ALLIANCE_0'),

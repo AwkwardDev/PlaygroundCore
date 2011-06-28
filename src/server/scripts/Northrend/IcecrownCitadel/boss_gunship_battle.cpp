@@ -826,7 +826,7 @@ class npc_korkron_primalist: public CreatureScript
 
 /* ----------------------------------- Spells ----------------------------------- */
 
-// This is a big hack, and here because spell cooldown is not implemented on creatures, nor category cooldown.
+/* Overheat - 69487 */
 class spell_icc_overheat : public SpellScriptLoader
 {
     public:
@@ -858,7 +858,7 @@ class spell_icc_overheat : public SpellScriptLoader
         }
 };
 
-/* Rocket Pack */
+/* Rocket Pack - 69188 */
 /* 68721 is a big red ball */
 /* 69193 is the damage when landing, it does not include the visual (which is 69192) */
 class spell_icc_rocket_pack : public SpellScriptLoader
@@ -892,9 +892,31 @@ class spell_icc_rocket_pack : public SpellScriptLoader
             }
         };
 
+        class spell_icc_rocket_pack_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_icc_rocket_pack_AuraScript);
+
+            void AfterRemove(AuraEffect const* aurEff, AuraEffectHandleModes /*mode*/)
+            {
+                Unit* caster = GetCaster();
+                caster->CastSpell(caster, 69193, true); // This is an AoE so ... Dunno
+                // 69193 does trigger the visual AoE effect (69192) through DB
+            }
+
+            void Register()
+            {
+                AfterEffectRemove += AuraEffectRemoveFn(spell_icc_rocket_pack_AuraScript::AfterRemove, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+            }
+        };
+
         SpellScript* GetSpellScript() const
         {
             return new spell_icc_rocket_pack_SpellScript();
+        }
+
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_icc_rocket_pack_AuraScript();
         }
 };
 
