@@ -11,10 +11,11 @@ UPDATE `creature_template` SET `ScriptName` = 'npc_gunship_cannon' WHERE `entry`
 UPDATE `creature_template` SET `ScriptName` = 'npc_gunship_cannon' WHERE `entry` = 36839;
 
 -- SpellScripts
-DELETE FROM `spell_script_names` WHERE spell_id IN (69487, 69188);
+DELETE FROM `spell_script_names` WHERE spell_id IN (69487, 69188, 70713);
 INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES
 (69487, "spell_icc_overheat"),
-(69188, "spell_icc_rocket_pack");
+(69188, "spell_icc_rocket_pack"),
+(70713, "spell_icc_remove_rocket_pack");
 
 -- Templates updates
 UPDATE `creature_template` SET `exp` = 2, `VehicleId` = 554, `RegenHealth` = 0, `spell1` = 69399, `spell2` = 69401 WHERE entry IN (36838, 36839);
@@ -42,7 +43,7 @@ INSERT INTO `spell_linked_spell` (`spell_trigger`, `spell_effect`, `type`, `comm
 (71193, -71188, 0, 'Gunship Battle - Veteran removes Experimented'),
 (71195, -71193, 0, 'Gunship Battle - Elite removes Veteran'),
 -- (68645, 69188, 0, 'Gunship Battle - Fix visual for Rocket Pack'), -- Does not get removed for some reason
-(68645, 69193, 0, 'Gunship Battle - Fix visual for Rocket Pack');
+(68645, 69193, 0, 'Gunship Battle - Fix visual for Rocket Pack'),
 (69193, 69192, 0, 'Gunship Battle - Cast Rocket Burst when landing with Rocket Pack');
 
 -- Add spell conditions for 69705 (Below Zero)
@@ -73,7 +74,7 @@ SET @DEFENDER := 37032;
 SET @VINDICATOR := 37003;
 SET @SORCERER := 37026;
 SET @PROTECTOR := 36998;
-SET @SOUNDID := 0; -- Still have to find them.
+SET @SOUNDID := 0; -- Still have to find them (boring part)
 DELETE FROM `creature_text` WHERE `entry` IN (36948, 36939, 37030, 37033, 37032, 37003, 37026, 36998);
 INSERT INTO `creature_text` (`entry`,`groupid`,`id`,`text`,`type`,`language`,`probability`,`emote`,`duration`,`sound`,`comment`) VALUES
 (@MURADIN,  0, 0, 'Fire up the engines! We got a meetin'' with destiny, lads!', 14, 0, 100, 0, 0, @SOUNDID, 'Muradin Bronzebeard - SAY_INTRO_ALLIANCE_0'),

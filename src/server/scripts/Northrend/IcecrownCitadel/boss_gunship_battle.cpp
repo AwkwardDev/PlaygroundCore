@@ -920,7 +920,7 @@ class spell_icc_rocket_pack : public SpellScriptLoader
         }
 };
 
-/* Remove Rocket Pack */
+/* Remove Rocket Pack - 70713 */
 class spell_icc_remove_rocket_pack : public SpellScriptLoader
 {
     public:
@@ -930,18 +930,20 @@ class spell_icc_remove_rocket_pack : public SpellScriptLoader
         {
             PrepareSpellScript(spell_icc_remove_rocket_pack_SpellScript);
 
-            void OnEffect(SpellEffIndex effIndex)
+            void HandleEffect(SpellEffIndex /*effIndex*/)
             {
                 Player* hitPlr = GetHitPlayer();
-                Unit* caster = GetCaster();
-
-                if (!hitPlr)
+                if (!hitPlr) // If player is offline
                     return;
+
+                int32 itemId = GetEffectValue();
+                uint32 itemCount = hitPlr->GetItemCount(itemId, false); // Should be 1, but just in case.
+                hitPlr->DestroyItemCount(itemId, -itemCount, true, false);
             }
 
             void Register()
             {
-                OnEffect += SpellEffectFn(spell_icc_remove_rocket_pack::OnEffect, 0, SPELL_EFFECT_SCRIPT_EFFECT);
+                OnEffect += SpellEffectFn(spell_icc_remove_rocket_pack_SpellScript::HandleEffect, EFFECT_0, SPELL_EFFECT_SCRIPT_EFFECT);
             }
         };
 
@@ -996,6 +998,7 @@ void AddSC_boss_gunship_battle()
     // Spells
     new spell_icc_overheat();
     new spell_icc_rocket_pack();
+    new spell_icc_remove_rocket_pack();
 
     // Various
     new npc_zafod_boombox();
