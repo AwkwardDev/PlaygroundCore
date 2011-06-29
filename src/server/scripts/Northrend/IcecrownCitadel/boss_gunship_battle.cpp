@@ -330,6 +330,12 @@ class npc_muradin_gunship : public CreatureScript
             if (pInstance && pInstance->GetBossState(DATA_GUNSHIP_EVENT) != DONE)
             {
                 player->ADD_GOSSIP_ITEM(0, "My companions are all accounted for, Muradin. Let's go!", 631, 1001);
+                // Some testing items - ALL MAY LEAD TO CRASH, TESTIN' PURPOSE ONLY
+                player->ADD_GOSSIP_ITEM(0, "Spawn transport using GO_SKYBREAKER_FRIENDLY", 631, 1002);
+                player->ADD_GOSSIP_ITEM(0, "Spawn transport using GO_SKYBREAKER_UNFRIENDLY", 631, 1003);
+                player->ADD_GOSSIP_ITEM(0, "Spawn transport using GO_ORGRIMS_HAMMER_FRIENDLY", 631, 1004);
+                player->ADD_GOSSIP_ITEM(0, "Spawn transport using GO_ORGRIMS_HAMMER_UNFRIENDLY", 631, 1005);
+
                 player->SEND_GOSSIP_MENU(player->GetGossipTextId(pCreature), pCreature->GetGUID());
                 return true;
             }
@@ -368,6 +374,75 @@ class npc_muradin_gunship : public CreatureScript
                 }
                 else
                     pCreature->MonsterYell("FUUUUU I'm not on my ship !", LANG_UNIVERSAL, 0);
+            }
+            else
+            {
+                if (action > 1001 && action < 1006)
+                {
+                    uint32 goEntry;
+                    switch (action)
+                    {
+                        case 1002:
+                            goEntry = 201811;
+                            break;
+                        case 1003:
+                            goEntry = 201580;
+                            break;
+                        case 1004:
+                            goEntry = 201812;
+                            break;
+                        case 1005:
+                            goEntry = 201581;
+                            break;
+                    }
+
+                    const GameObjectTemplate* goInfo = sObjectMgr->GetGameObjectTemplate(goEntry);
+                    if (!goInfo)
+                    {
+                        pCreature->MonsterYell("Missing gameobject_template", LANG_UNIVERSAL, 0);
+                        sLog->outErrorDb("Transport ID: %u, Name: %s, will not be loaded, gameobject_template missing", goEntry, goInfo->name.c_str());
+                        return true;
+                    }
+
+                    Transport *t = new Transport(51584, goInfo->ScriptId); //51584 = period, MAY BE WRONG
+                    std::set<uint32> mapsUsed;
+                    if (!t->GenerateWaypoints(goInfo->moTransport.taxiPathId, mapsUsed))
+                    {
+                        pCreature->MonsterYell("Path is empty", LANG_UNIVERSAL, 0);
+                        sLog->outErrorDb("Transport (path id %u) path size = 0. Transport ignored, check DBC files or the gameobject's data0 field.", goInfo->moTransport.taxiPathId);
+                        delete t;
+                        return true;
+                    }
+
+                    uint32 transportLowGuid = sObjectMgr->GenerateLowGuid(HIGHGUID_MO_TRANSPORT);
+                    // Creates the Gameobject
+                    if (!t->Create(transportLowGuid, goEntry, t->m_WayPoints[0].mapid, t->m_WayPoints[0].x, t->m_WayPoints[0].y, t->m_WayPoints[0].z, 0.0f, 0, 0))
+                    {
+                        delete t;
+                        return true;
+                    }
+
+                    t->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE);
+                    t->SetGoState(GO_STATE_READY);
+                    Map* tMap = player->GetMap();
+                    t->SetMap(tMap);
+                    t->AddToWorld();
+
+                    // Creation packet to all players on map
+                    for (Map::PlayerList::const_iterator itr = tMap->GetPlayers().begin(); itr != tMap->GetPlayers().end(); ++itr)
+                        if (Player* pPlayer = itr->getSource())
+                        {
+                            UpdateData transData;
+                            t->BuildCreateUpdateBlockForPlayer(&transData, pPlayer);
+                            WorldPacket packet;
+                            transData.BuildPacket(&packet);
+                            pPlayer->SendDirectMessage(&packet);
+                        }
+
+                    sMapMgr->m_Transports.insert(playersBoat);
+                    t->Update(1);
+                    t->BuildStopMovePacket(tMap);
+                }
             }
 
             return true;
