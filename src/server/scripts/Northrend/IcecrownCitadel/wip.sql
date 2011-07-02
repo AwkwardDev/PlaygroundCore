@@ -42,8 +42,9 @@ DELETE FROM `spell_linked_spell` WHERE `spell_trigger` = 69193 AND `spell_effect
 INSERT INTO `spell_linked_spell` (`spell_trigger`, `spell_effect`, `type`, `comment`) VALUES
 (71193, -71188, 0, 'Gunship Battle - Veteran removes Experimented'),
 (71195, -71193, 0, 'Gunship Battle - Elite removes Veteran'),
--- (68645, 69188, 0, 'Gunship Battle - Fix visual for Rocket Pack'), -- Does not get removed for some reason
+(68645, 69188, 0, 'Gunship Battle - Fix visual for Rocket Pack'),
 (68645, 69193, 0, 'Gunship Battle - Fix visual for Rocket Pack'),
+(68645, 68721, 0, 'Gunship Battle - Fix visual for Rocket Pack'),
 (69193, 69192, 0, 'Gunship Battle - Cast Rocket Burst when landing with Rocket Pack');
 
 -- Add spell conditions for 69705 (Below Zero)

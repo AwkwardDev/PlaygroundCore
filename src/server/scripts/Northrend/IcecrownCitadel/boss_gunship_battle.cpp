@@ -824,9 +824,11 @@ class npc_korkron_rocketeer : public CreatureScript
                 }
             }
 
+            std::list<mortarMarksLoc> getMarksPositions() { return marks; }
+            bool setMarks(std::list<mortarMarksLoc> newMarks) { marks = newMarks; }
         private:
-            std::list<mortarMarksLoc> marks;
             EventMap events;
+            std::list<mortarMarksLoc> marks;
         };
 };
 
@@ -983,6 +985,7 @@ class spell_icc_rocket_pack : public SpellScriptLoader
                 // The aura checks if the player has the aura that Zafod Boombox uses. (SPELL_EFFECT_APPLY_AREA_AURA_FRIEND)
                 if (!caster->ToPlayer()->HasAura(70348)) // Rocket Pack Useable
                 {
+                    // May have a custom error message.
                     Spell::SendCastResult(caster->ToPlayer(), GetSpellInfo(), 0, SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW);
                     return SPELL_FAILED_CANT_DO_THAT_RIGHT_NOW;
                 }
@@ -1003,8 +1006,10 @@ class spell_icc_rocket_pack : public SpellScriptLoader
             void AfterRemove(AuraEffect const* aurEff, AuraEffectHandleModes /*mode*/)
             {
                 Unit* caster = GetCaster();
-                caster->CastSpell(caster, 69193, true); // This is an AoE so ... Dunno
+                caster->CastSpell(caster, 69193, true);
                 // 69193 does trigger the visual AoE effect (69192) through DB
+                caster->RemoveAurasDueToSpell(69188); // spell_linked_spell
+                caster->RemoveAurasDueToSpell(68721); // spell_linked_spell
             }
 
             void Register()
@@ -1054,6 +1059,55 @@ class spell_icc_remove_rocket_pack : public SpellScriptLoader
         SpellScript* GetSpellScript() const
         {
             return new spell_icc_remove_rocket_pack_SpellScript();
+        }
+};
+
+/* Rocket Artillery - 69679 */
+class spell_icc_rocket_artillery_triggered : public SpellScriptLoader
+{
+    public:
+        spell_icc_rocket_artillery_triggered() : SpellScriptLoader("spell_icc_rocket_artillery_triggered") { }
+
+        class spell_icc_rocket_artillery_triggered_SpellScript : public SpellScript
+        {
+            PrepareSpellScript(spell_icc_rocket_artillery_triggered_SpellScript);
+
+            void HandleEffect(SpellEffIndex /*effIndex*/)
+            {
+                Unit* caster = GetCaster();
+                WorldLocation* targetedArea = GetTargetDest();
+                if (!targetedArea || !caster || caster->GetTypeId() != TYPEID_UNIT)
+                    return;
+
+                Position targetedPosition;
+                targetedArea->GetPosition(&targetedPosition);
+
+                std::list<mortarMarksLoc> marks = CAST_AI(npc_korkron_rocketeer::npc_korkron_rocketeerAI, caster->ToCreature()->AI())->getMarksPositions();
+                for (std::list<mortarMarksLoc>::iterator itr = marks.begin(); itr != marks.end(); ++itr)
+                {
+                    // I love dirty code
+                    Position positionInList = (*itr).location;
+                    if (positionInList.m_positionX == targetedPosition.m_positionX)
+                        if (positionInList.m_positionY == targetedPosition.m_positionY)
+                            if (positionInList.m_positionZ == targetedPosition.m_positionZ)
+                            {
+                                // Don't give a fuck about orientation
+                                marks.remove(*itr);
+                            }
+                }
+				
+				CAST_AI(npc_korkron_rocketeer::npc_korkron_rocketeerAI, caster->ToCreature()->AI())->setMarks(marks);
+            }
+
+            void Register()
+            {
+                OnEffect += SpellEffectFn(spell_icc_rocket_artillery_triggered_SpellScript::HandleEffect, EFFECT_0, SPELL_EFFECT_TRIGGER_SPELL);
+            }
+        };
+
+        SpellScript* GetSpellScript() const
+        {
+            return new spell_icc_rocket_artillery_triggered_SpellScript();
         }
 };
 
