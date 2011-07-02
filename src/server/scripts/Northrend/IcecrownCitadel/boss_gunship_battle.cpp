@@ -29,7 +29,7 @@ struct NPCsPositions
 {
     uint32 npcId; // `creature_template`.`entry`
     // The position should be set offseted from the transport's position.
-    Position position; // Position if the team in the instance is the Alliance
+    Position position;
     uint32 faction;
 };
 
@@ -105,6 +105,13 @@ enum Spells
     // Kor'kron Axethrower & Skybreaker Rifleman
     SPELL_HURL_AXE                    = 70161,
     SPELL_SHOOT                       = 70162,
+
+    // Kor'kron Rocketeer & Skybreaker Mortar Soldier
+    SPELL_ROCKET_ARTILLERY_MARKER     = 71371,
+    SPELL_ROCKET_ARTILLERY_TRIGGERED  = 69679,
+    SPELL_ROCKET_ARTILLERY_HORDE      = 69678,
+    SPELL_ROCKET_ARTILLERY_ALLIANCE   = 70609,
+    SPELL_EXPLOSION                   = 69680,
 };
 
 enum Events
@@ -220,50 +227,16 @@ enum Actions
     ACTION_RESPAWN_ROCKETEERS,
 };
 
+enum Points
+{
+    POINT_FIRST_POS_MAGE_ALLIANCE        = 3711601,
+    POINT_SECOND_POS_MAGE_ALLIANCE       = 3711602,
+    POINT_BELOW_ZERO                     = 3711603,
+};
+
 /* ----------------------------------- Behavior : --------------------------------- */
-// Transport* wut = SetTransportWaypointId(LoadTransportFromGoEntry(GoEntry, period), wpId, GoEntry));
-// Todo: remake this, this is ugly.
-Transport* LoadTransportFromGoEntry(uint32 goEntry, uint32 period)
-{
-    const GameObjectTemplate* goInfo = sObjectMgr->GetGameObjectTemplate(goEntry);
-    if (!goInfo)
-    {
-        sLog->outErrorDb("Transport ID: %u, Name: %s, will not be loaded, gameobject_template is missing", goEntry, goInfo->name.c_str());
-        return NULL;
-    }
-    Transport *t = new Transport(period, goInfo->ScriptId);
-
-    std::set<uint32> mapsUsed;
-    if (!t->GenerateWaypoints(goInfo->moTransport.taxiPathId, mapsUsed))
-    {
-        sLog->outErrorDb("Transport (path id %u) path size = 0. Transport ignored, check DBC files or the gameobject's data0 field.", goInfo->moTransport.taxiPathId);
-        delete t;
-        return NULL;
-    }
-
-    return t;
-}
-
-Transport* SetTransportWaypointId(Transport* t, uint32 wpId, uint32 goEntry)
-{
-    uint32 transportLowGuid = sObjectMgr->GenerateLowGuid(HIGHGUID_MO_TRANSPORT);
-    uint32 wantedWp = wpId;
-    uint32 wpCount = t->m_WayPoints.size();
-    if (wpId > wpCount)
-    {
-        sLog->outError("ICCGunship::SetTransportWaypointId: Waypoint ID %u specified is greater than m_Waypoints.size(), assuming we want the last waypoint.", wpId);
-        wantedWp = wpCount;
-    }
-
-    // Creates the Gameobject
-    if (!t->Create(transportLowGuid, goEntry, t->m_WayPoints[wantedWp].mapid, t->m_WayPoints[wantedWp].x, t->m_WayPoints[wantedWp].y, t->m_WayPoints[wantedWp].z, 0.0f, 0, 0))
-    {
-        delete t;
-        return NULL;
-    }
-
-    return t;
-}
+// Transport* wut = instance->PrepareTransport(goEntry, period);
+// wut = instance->SetTransportPosition(wut, position, goEntry);
 
 void AddPassengers(Transport* t, uint32 teamInInstance, uint32 transportFaction)
 {
@@ -284,7 +257,7 @@ void AddPassengers(Transport* t, uint32 teamInInstance, uint32 transportFaction)
 
 /* ----------------------------------- Gunship Battle Itself ----------------------------------- */
 
-/* Player's transport script */
+/* transport script */
 class transport_gunship : public TransportScript
 {
     public:
@@ -345,6 +318,7 @@ class npc_muradin_gunship : public CreatureScript
 
         bool OnGossipSelect(Player* player, Creature* pCreature, uint32 /*sender*/, uint32 action)
         {
+            InstanceScript* instance = pCreature->GetInstanceScript();
             player->PlayerTalkClass->ClearMenus();
             player->CLOSE_GOSSIP_MENU();
             if (action == 1001) // Make the boat move
@@ -399,27 +373,29 @@ class npc_muradin_gunship : public CreatureScript
                     const GameObjectTemplate* goInfo = sObjectMgr->GetGameObjectTemplate(goEntry);
                     if (!goInfo)
                     {
-                        pCreature->MonsterYell("Missing gameobject_template", LANG_UNIVERSAL, 0);
-                        sLog->outErrorDb("Transport ID: %u, Name: %s, will not be loaded, gameobject_template missing", goEntry, goInfo->name.c_str());
-                        return true;
+                        pCreature->MonsterYell("gameobject_template missing", LANG_UNIVERSAL, 0);
+                        sLog->outErrorDb("Transport ID: %u, Name: %s, will not be loaded, gameobject_template is missing", goEntry, goInfo->name.c_str());
+                        return false;
                     }
+                    Transport* t = new Transport(51584, goInfo->ScriptId);
 
-                    Transport *t = new Transport(51584, goInfo->ScriptId); //51584 = period, MAY BE WRONG
                     std::set<uint32> mapsUsed;
                     if (!t->GenerateWaypoints(goInfo->moTransport.taxiPathId, mapsUsed))
                     {
-                        pCreature->MonsterYell("Path is empty", LANG_UNIVERSAL, 0);
                         sLog->outErrorDb("Transport (path id %u) path size = 0. Transport ignored, check DBC files or the gameobject's data0 field.", goInfo->moTransport.taxiPathId);
                         delete t;
-                        return true;
+                        pCreature->MonsterYell("Path size = 0", LANG_UNIVERSAL, 0);
+                        return false;
                     }
 
                     uint32 transportLowGuid = sObjectMgr->GenerateLowGuid(HIGHGUID_MO_TRANSPORT);
+
                     // Creates the Gameobject
                     if (!t->Create(transportLowGuid, goEntry, t->m_WayPoints[0].mapid, t->m_WayPoints[0].x, t->m_WayPoints[0].y, t->m_WayPoints[0].z, 0.0f, 0, 0))
                     {
                         delete t;
-                        return true;
+                        pCreature->MonsterYell("Could not create the transport", LANG_UNIVERSAL, 0);
+                        return false;
                     }
 
                     t->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE);
@@ -428,7 +404,7 @@ class npc_muradin_gunship : public CreatureScript
                     t->SetMap(tMap);
                     t->AddToWorld();
 
-                    // Creation packet to all players on map
+                    // Transmit creation packet to all players on map
                     for (Map::PlayerList::const_iterator itr = tMap->GetPlayers().begin(); itr != tMap->GetPlayers().end(); ++itr)
                         if (Player* pPlayer = itr->getSource())
                         {
@@ -442,6 +418,8 @@ class npc_muradin_gunship : public CreatureScript
                     sMapMgr->m_Transports.insert(playersBoat);
                     t->Update(1);
                     t->BuildStopMovePacket(tMap);
+
+                    pCreature->MonsterYell("Transport was spawned \o/", LANG_UNIVERSAL, 0);
                 }
             }
 
@@ -473,12 +451,15 @@ class npc_muradin_gunship : public CreatureScript
 
             void UpdateAI(const uint32 diff)
             {
-                if (me->getVictim()->HasAura(SPELL_ON_ORGRIMS_HAMMERS_DECK))
+                if (UpdateVictim())
                 {
-                    if (!me->getVictim()->IsWithinDistInMap(me, 50.0f, false)) // Todo: Fix the distance
-                        EnterEvadeMode();
-                    else
-                        events.ScheduleEvent(EVENT_RENDING_THROW, 100);
+                    if (me->getVictim()->HasAura(SPELL_ON_ORGRIMS_HAMMERS_DECK))
+                    {
+                        if (!me->getVictim()->IsWithinDistInMap(me, 50.0f, false)) // Todo: Fix the distance
+                            EnterEvadeMode();
+                        else
+                            events.ScheduleEvent(EVENT_RENDING_THROW, 100);
+                    }
                 }
 
                 events.Update(diff);
@@ -488,13 +469,14 @@ class npc_muradin_gunship : public CreatureScript
                     switch (eventId)
                     {
                         case EVENT_RENDING_THROW:
-                            if (me->getVictim()->IsWithinDistInMap(me, 50.0f, false)) // Todo: Fix the distance
-                            {
-                                DoCastVictim(SPELL_RENDING_THROW);
-                                events.ScheduleEvent(EVENT_RENDING_THROW, 5000); // Todo: fix the timer
-                            }
-                            else
-                                events.CancelEvent(EVENT_RENDING_THROW);
+                            if (UpdateVictim())
+                                if (me->getVictim()->IsWithinDistInMap(me, 50.0f, false)) // Todo: Fix the distance
+                                {
+                                    DoCastVictim(SPELL_RENDING_THROW);
+                                    events.ScheduleEvent(EVENT_RENDING_THROW, 5000); // Todo: fix the timer
+                                }
+                                else
+                                    events.CancelEvent(EVENT_RENDING_THROW);
                             break;
                         case EVENT_TASTE_OF_BLOOD:
                             DoCast(me, SPELL_TASTE_OF_BLOOD);
@@ -540,7 +522,7 @@ class npc_zafod_boombox : public CreatureScript
 
         bool OnGossipHello(Player* pPlayer, Creature* pCreature)
         {
-            // Maybe this isn't blizzlike
+            // Maybe this isn't blizzlike but I can't find any spell in the DBCs
             if (pPlayer->GetItemCount(49278, false) == 0)
                 pPlayer->ADD_GOSSIP_ITEM(0, "Yeah, I'm sure safety is your top priority. Give me a rocket pack.", 631, 1);
             pPlayer->SEND_GOSSIP_MENU(pPlayer->GetGossipTextId(pCreature), pCreature->GetGUID());
@@ -557,7 +539,7 @@ class npc_zafod_boombox : public CreatureScript
                 uint32 curItemCount = player->GetItemCount(49278, false);
                 if (curItemCount >= 1)
                 {
-                    pCreature->MonsterWhisper("You already have my rocket pack !", player->GetGUIDLow());
+                    pCreature->MonsterWhisper("You already have my rocket pack!", player->GetGUIDLow());
                     return false;
                 }
 
@@ -567,6 +549,11 @@ class npc_zafod_boombox : public CreatureScript
                 {
                     Item* item = player->StoreNewItem(dest, 49278, true);
                     player->SendNewItem(item, 1, true, false);
+                }
+                else
+                {
+                    pCreature->MonsterWhisper("You don't have any empty space for my rocket pack!", player->GetGUIDLow());
+                    return false;
                 }
             }
 
@@ -586,7 +573,6 @@ class npc_gunship_cannon : public CreatureScript
 
             void SpellHit(Unit* caster, SpellEntry const* spellEntry)
             {
-                // TODO : Move this to AuraScript ?
                 if (spellEntry->Id == SPELL_BELOW_ZERO)
                     me->GetVehicleKit()->RemoveAllPassengers();
             }
@@ -758,9 +744,6 @@ class npc_skybreaker_rifleman : public CreatureScript
         }
 };
 
-/* Skybreaker Sorcerer & Kor'kron Battle-Mage */
-/* Won't be able to do these two unless I have sniffs or can perform tests on local */
-
 /* The Skybreaker */
 class npc_the_skybreaker : public CreatureScript
 {
@@ -799,6 +782,52 @@ class npc_the_skybreaker : public CreatureScript
         {
             return new npc_the_skybreakerAI(pCreature);
         }
+};
+
+// This variable is only used by rocketeers, this is a hack
+struct mortarMarksLoc
+{
+    uint32 durationBeforeRefreshing;
+    Position location;
+};
+
+class npc_korkron_rocketeer : public CreatureScript
+{
+    public:
+        npc_korkron_rocketeer() : CreatureScript("npc_korkron_rocketeer") { }
+
+        struct npc_korkron_rocketeerAI : public ScriptedAI
+        {
+            npc_korkron_rocketeerAI(Creature *creature) : ScriptedAI(creature) { }
+
+            void UpdateAI(const uint32 diff)
+            {
+                if (UpdateVictim())
+                {
+                    Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f, true, SPELL_ON_SKYBREAKERS_DECK);
+                    Position pos;
+                    target->GetPosition(&pos);
+                    mortarMarksLoc markPos;
+                    markPos.durationBeforeRefreshing = 5000;
+                    markPos.location = pos;
+                    marks.push_back(markPos);
+                    me->CastSpell(target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), SPELL_ROCKET_ARTILLERY_TRIGGERED, true);
+                }
+
+                // Hacky, spell system is not blizzlike
+                // May also lead to crashes ?
+                for (std::list<mortarMarksLoc>::iterator itr = marks.begin(); itr != marks.end(); ++itr)
+                {
+                    if ((*itr).durationBeforeRefreshing == 5000)
+                        me->CastSpell((*itr).location.GetPositionX(), (*itr).location.GetPositionY(), (*itr).location.GetPositionZ(), SPELL_ROCKET_ARTILLERY_MARKER, true);
+                    (*itr).durationBeforeRefreshing -= diff;
+                }
+            }
+
+        private:
+            std::list<mortarMarksLoc> marks;
+            EventMap events;
+        };
 };
 
 /* ----------------------------------- Rampart of Skulls NPCs ----------------------------------- */

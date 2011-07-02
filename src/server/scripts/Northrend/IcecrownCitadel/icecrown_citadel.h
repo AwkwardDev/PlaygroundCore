@@ -103,7 +103,9 @@ enum DataTypes
     // Gunship Battle
     DATA_FIRST_SQUAD_STATE          = 37,
     DATA_SECOND_SQUAD_STATE         = 38,
-    DATA_SPIRE_FROSTWYRM_STATE      = 39
+    DATA_SPIRE_FROSTWYRM_STATE      = 39,
+    DATA_GB_HIGH_OVERLORD_SAURFANG  = 40,
+    DATA_GB_MURADIN_BRONZEBEARD     = 41,
 };
 
 enum CreaturesIds
@@ -307,7 +309,7 @@ enum GameObjectsIds
     GO_ORGRIMS_HAMMER_UNFRIENDLY            = 201581, // Orgrim's Hammer if team in instance is ALLIANCE
     // Just for me to remember:
     // SELECT * FROM `gameobject_template` WHERE name LIKE "%Skybreaker%" OR name LIKE "%Orgrim's%"
-    // Strangely enough, they do not have the transport flag (except 192241 & 192242, which I guess are used in the Icecrown Area).
+    // Strangely enough, they do not have the transport flag
 
     // Lady Deathwhisper
     GO_ORATORY_OF_THE_DAMNED_ENTRANCE       = 201563,

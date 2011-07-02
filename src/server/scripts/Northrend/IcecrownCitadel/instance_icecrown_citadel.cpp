@@ -589,6 +589,10 @@ class instance_icecrown_citadel : public InstanceMapScript
             {
                 switch (type)
                 {
+                    case DATA_GB_HIGH_OVERLORD_SAURFANG:
+                        return GunshipBattleSaurfangGUID;
+                    case DATA_GB_MURADIN_BRONZEBEARD:
+                        return GunshipBattleMuradinGUID;
                     case DATA_DEATHBRINGER_SAURFANG:
                         return DeathbringerSaurfangGUID;
                     case DATA_SAURFANG_EVENT_NPC:
@@ -653,7 +657,6 @@ class instance_icecrown_citadel : public InstanceMapScript
                 switch (type)
                 {
                     case DATA_LADY_DEATHWHISPER:
-                        SetBossState(DATA_GUNSHIP_EVENT, state);    // TEMP HACK UNTIL GUNSHIP SCRIPTED
                         if (state == DONE)
                         {
                             if (GameObject* elevator = instance->GetGameObject(LadyDeathwisperElevatorGUID))
@@ -661,6 +664,18 @@ class instance_icecrown_citadel : public InstanceMapScript
                                 elevator->SetUInt32Value(GAMEOBJECT_LEVEL, 0);
                                 elevator->SetGoState(GO_STATE_READY);
                             }
+                        }
+                        break;
+                    case DATA_GUNSHIP_EVENT:
+                        switch(state)
+                        {
+                            case DONE:
+                            case FAIL:
+                                // Here we'll handle the movement of the gunship from the combat zone to the room where we fight Saurfang
+                                break;
+                            case NOT_STARTED:
+                                // Spawn the transport
+                                break;
                         }
                         break;
                     case DATA_DEATHBRINGER_SAURFANG:
@@ -1118,6 +1133,27 @@ class instance_icecrown_citadel : public InstanceMapScript
                 }
 
                 return true;
+            }
+
+            Transport* SetTransportPosition(Transport* t, uint32 wpId, uint32 goEntry)
+            {
+                uint32 transportLowGuid = sObjectMgr->GenerateLowGuid(HIGHGUID_MO_TRANSPORT);
+                uint32 wantedWp = wpId;
+                uint32 wpCount = t->m_WayPoints.size();
+                if (wpId > wpCount)
+                {
+                    sLog->outError("ICCGunship::SetTransportWaypointId: Waypoint ID %u specified is greater than m_Waypoints.size(), assuming we want the last waypoint.", wpId);
+                    wantedWp = wpCount;
+                }
+
+                // Creates the Gameobject
+                if (!t->Create(transportLowGuid, goEntry, t->m_WayPoints[wantedWp].mapid, t->m_WayPoints[wantedWp].x, t->m_WayPoints[wantedWp].y, t->m_WayPoints[wantedWp].z, 0.0f, 0, 0))
+                {
+                    delete t;
+                    return NULL;
+                }
+
+                return t;
             }
 
             std::string GetSaveData()
